@@ -2,6 +2,7 @@
   "name": "@skan-io/applify",
   "version": "0.0.0-semantically-released",
   "description": "React application template generator",
+  "private": false,
   "engines": {
     "node": ">=6.2.0"
   },
