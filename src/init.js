@@ -92,13 +92,13 @@ const createInitTasks = async ({
     ]
   });
 
-  if (initAmplify) {
-    tasks.push({
-      type: 'initGlobalBackend',
-      description: 'Installing amplify cli globally...',
-      args: []
-    });
-  }
+  // if (initAmplify) {
+  //   tasks.push({
+  //     type: 'initGlobalBackend',
+  //     description: 'Installing amplify cli globally...',
+  //     args: []
+  //   });
+  // }
 
   if (initSourceControl && !initAmplify) {
     const withGitIgnore = true;

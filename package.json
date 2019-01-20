@@ -1,64 +1,18 @@
 {
-  "name": "@skan-io/applify",
-  "version": "0.0.0-semantically-released",
-  "description": "React application template generator",
-  "private": false,
-  "engines": {
-    "node": ">=6.2.0"
-  },
-  "bin": {
-    "applify": "./applify.js"
-  },
-  "main": "./run.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/skan-io/applify.git"
-  },
-  "author": "Skan Admin <admin@skan.io> (https://skan.io/)",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/skan-io/applify/issues"
-  },
-  "homepage": "https://github.com/skan-io/applify#readme",
-  "dependencies": {
-    "chalk": "2.4.2",
-    "commander": "2.19.0",
-    "inquirer": "6.2.1"
-  },
-  "devDependencies": {
-    "@babel/cli": "7.2.3",
-    "@babel/core": "7.2.2",
-    "@babel/node": "7.2.2",
-    "@babel/plugin-proposal-object-rest-spread": "7.2.0",
-    "@babel/plugin-proposal-optional-catch-binding": "7.2.0",
-    "@babel/plugin-proposal-throw-expressions": "7.2.0",
-    "@babel/plugin-transform-runtime": "7.2.0",
-    "@babel/preset-env": "7.2.3",
-    "@babel/register": "7.0.0",
-    "@rauschma/stringio": "1.4.0",
-    "@skan-io/eslint-config-base": "1.0.1",
-    "babel-cli": "6.26.0",
-    "babel-core": "6.26.3",
-    "babel-eslint": "10.0.1",
-    "babel-jest": "23.6.0",
-    "commitizen": "3.0.5",
-    "cz-conventional-changelog": "2.1.0",
-    "eslint": "5.12.1",
-    "eslint-plugin-babel": "5.3.0",
-    "jest-cli": "23.6.0",
-    "npx-run": "2.1.2",
-    "remark-cli": "6.0.1",
-    "remark-lint": "6.0.4",
-    "remark-preset-lint-recommended": "3.0.2",
-    "rimraf": "2.6.3",
-    "semantic-release": "15.13.3"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "applify",
+    "version": "0.0.0-semantically-released",
+    "private": false,
+    "description": "A react boilerplate app for applify",
+    "license": "MIT",
+    "engines": {
+        "node": ">=10.0.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nickmanks/applify.git"
+    },
+    "bugs": {
+        "url": "https://github.com/nickmanks/applify/issues"
+    },
+    "homepage": "https://github.com/nickmanks/applify#readme"
 }
