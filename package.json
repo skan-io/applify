@@ -20,6 +20,11 @@
     "url": "https://github.com/skan-io/applify/issues"
   },
   "homepage": "https://github.com/skan-io/applify#readme",
+  "dependencies": {
+    "chalk": "2.4.2",
+    "commander": "2.19.0",
+    "inquirer": "6.2.1"
+  },
   "devDependencies": {
     "@babel/cli": "7.2.3",
     "@babel/core": "7.2.2",
@@ -35,22 +40,17 @@
     "babel-core": "6.26.3",
     "babel-eslint": "10.0.1",
     "babel-jest": "23.6.0",
-    "chalk": "2.4.2",
-    "commander": "2.19.0",
     "commitizen": "3.0.5",
     "cz-conventional-changelog": "2.1.0",
     "eslint": "5.12.1",
     "eslint-plugin-babel": "5.3.0",
-    "inquirer": "6.2.1",
     "jest-cli": "23.6.0",
-    "nodemon": "1.18.9",
     "npx-run": "2.1.2",
     "remark-cli": "6.0.1",
     "remark-lint": "6.0.4",
     "remark-preset-lint-recommended": "3.0.2",
     "rimraf": "2.6.3",
-    "semantic-release": "15.13.3",
-    "string-argv": "0.1.1"
+    "semantic-release": "15.13.3"
   },
   "config": {
     "commitizen": {
