@@ -1,0 +1,12 @@
+# Storybook
+.cache
+
+# Dependency directory
+node_modules
+npm-debug.log
+.idea
+.DS_Store
+.vscode
+
+# Build artifacts
+build
