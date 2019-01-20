@@ -18,11 +18,11 @@ export const initializeMultiEnvManager = async (projectName, repoOwner)=> {
     await initializeSourceControlManager(
       projectName, repoOwner, envs[i], i === 0
     );
-    
+
     await initializeBackendManager(envs[i]);
 
     await sourceControlPush(
-      envs[i], 'chore', 'tooling', 'Added initial amplify code', [], true
+      envs[i], false, 'chore', 'tooling', 'Added initial amplify code', [], true
     );
 
     if (i !== envs.length - 1) {

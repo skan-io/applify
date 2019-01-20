@@ -10,3 +10,6 @@ npm-debug.log
 
 # Build artifacts
 build
+
+# Applify tokens
+.applify

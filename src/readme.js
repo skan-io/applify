@@ -8,23 +8,7 @@ import {parseDescription, parseMaintainers} from './utils';
 
 
 const readme = `
-<DELETE THIS SECTION (FOR YOUR EYES ONLY!)
-<If you have created this application using both amplify and git you will:
-<1. Have 3 environments (master, test, dev)
-<2. Each environment has a branch associated with it (master, test, dev)
-<3. They are synchronized and currently using the \`default\` aws profile
-<4. You can switch between environments using \`applify switch <env name>\`
-<5. You can push and pull changes between environments using \`applify push/pull <env name>\`
-<6. You can add \`amplify\` resources using standard amplify syntax
-<7. You can publish your app using standard \`amplify\` syntax
-<8. Standard amplify syntax look like \`amplify add auth\` or \`amplify publish\`
-
--------------
-
 <p align="center"><img src='<?projectLogo?>' height='140' /></p>
-<div style='text-align: center;'>
-<h3> test-applify </h3>
-</div>
 
 <p align="center">
 <b>

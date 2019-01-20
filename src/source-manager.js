@@ -1,7 +1,7 @@
 import fs from 'fs';
 import {join, dirname} from 'path';
-import {spawn} from 'child_process';
-import {onExit} from '@rauschma/stringio';
+import {prompt} from 'inquirer';
+import fetch from 'node-fetch';
 import chalk from 'chalk';
 import {shellExec} from './exec';
 
@@ -26,16 +26,18 @@ const generateStandardCommitMessage =
     title: `${type}(${scope}): ${message}`,
     description: closes.length > 0
       ? `${generateCloses(closes)}\n${generateBreaking(breaking)}`
-      : `${generateBreaking(breaking)}\n`
+      : `${generateBreaking(breaking)}`
   })
     ;
 
 export const sourceControlPush =
   // eslint-disable-next-line
-  async (branch, type, scope, message, closes, breaking=false)=> {
+  async (branch, newBranch, type, scope, message, closes, breaking=false)=> {
     try {
       console.log(chalk.blue(`Checking out ${branch}`));
-      const result = await shellExec(`git checkout -b ${branch}`);
+      const result = await shellExec(
+        `git checkout ${newBranch ? '-b' : ''} ${branch}`
+      );
       console.log(chalk.green(result.stdout));
       console.log(chalk.red(result.stderr));
     } catch (err) {
@@ -55,9 +57,9 @@ export const sourceControlPush =
       const commitMessage = generateStandardCommitMessage(
         type, scope, message, closes, breaking
       );
-      console.log('----------------************************ INITIALIZING BRANCH', {branch, commitMessage});
       console.log(
-        chalk.blue(`Adding commit message: \n${commitMessage}`)
+        // eslint-disable-next-line
+        chalk.blue(`Adding commit message: \n${commitMessage.title}, ${commitMessage.description}`)
       );
       const result = await shellExec(
         // eslint-disable-next-line
@@ -70,7 +72,7 @@ export const sourceControlPush =
     }
 
     try {
-      console.log(chalk.blue(`Pusing updated files to ${branch}`));
+      console.log(chalk.blue(`Pushing updated files to ${branch}`));
       const result = await shellExec(`git push -u origin ${branch}`);
       console.log(chalk.green(result.stdout));
       console.log(chalk.red(result.stderr));
@@ -84,23 +86,51 @@ export const initializeSourceControlManager =
   // eslint-disable-next-line
   async (projectName, repoOwner, branch, withGitIgnore=false)=> {
     let result = null;
+    let gitAccessToken = null;
+    let previousFile = null;
 
-    console.log('----------------************************ INITIALIZING BRANCH', {branch});
+    const applifyDir = join(process.cwd(), '.applify');
+
+    if (!fs.existsSync(applifyDir)) {
+      fs.mkdirSync(applifyDir);
+    }
+
+    const gitTokenFile = join(applifyDir, 'githubToken');
+
+    if (fs.existsSync(gitTokenFile)) {
+      previousFile = fs.readFileSync(gitTokenFile, 'utf8');
+    }
+
+    // eslint-disable-next-line
+    if (previousFile && previousFile.length > 6) {
+      gitAccessToken = previousFile;
+    } else {
+      const answer = await prompt([{
+        type: 'input',
+        message: 'Enter your github personal access token:',
+        name: 'gitAccessToken'
+      }]);
+      gitAccessToken = answer.gitAccessToken;
+    }
+
+    fs.writeFileSync(gitTokenFile, `${gitAccessToken}`);
+    fs.chmodSync(gitTokenFile, '755');
 
     if (branch === 'master') {
-      const gitApi = 'https://api.github.com/user/repos';
-      const childProcess = spawn(
-        'curl',
-        ['-u', `'${repoOwner}'`, gitApi, '-d', `{"name":"${projectName}"}`],
-        {stdio: [process.stdin, process.stdout]});
+      try {
+        const response = await fetch('https://api.github.com/user/repos', {
+          method: 'POST',
+          headers: {
+            Authorization: `bearer ${gitAccessToken}`
+          },
+          body: JSON.stringify({name: projectName})
+        });
 
-      childProcess.stderr.on('data', (data)=> {
-        console.log(chalk.red(data));
-        // eslint-disable-next-line
-        // throw new Error('Unable to register the new repo with git (maybe check your credentials)');
-      });
-
-      await onExit(childProcess);
+        await response.json();
+        console.log(chalk.green('Successfully create new remote repository'));
+      } catch (err) {
+        console.log(chalk.red(err));
+      }
 
       try {
         result = await shellExec(`git init`);
@@ -114,8 +144,6 @@ export const initializeSourceControlManager =
         result = await shellExec(
           `git remote add origin git@github.com:${repoOwner}/${projectName}.git`
         );
-        console.log(chalk.red(result.stderr));
-        console.log(chalk.green(result.stdout));
       } catch (err) {
         console.log(chalk.yellow(err));
       }
@@ -130,6 +158,12 @@ export const initializeSourceControlManager =
     }
 
     await sourceControlPush(
-      branch, 'chore', 'tooling', 'Initializing the branch', [], true
+      branch,
+      branch === 'master',
+      'chore',
+      'tooling',
+      'Initializing the branch',
+      [],
+      true
     );
   };
