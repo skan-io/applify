@@ -1,15 +1,21 @@
 import chalk from 'chalk';
 import {initializePackageManager} from './package-manager';
-import {initializeBackendManager} from './backend-manager';
-import {initializeSourceControl} from './source-control';
+import {
+  initializeBackendManager,
+  installBackendGlobally
+} from './backend-manager';
+import {initializeSourceControlManager} from './source-manager';
+import {initializeMultiEnvManager} from './multienv-manager';
 import {initializeReadme} from './readme';
 
 
 const taskFunctions = {
   initPackageManager: initializePackageManager,
-  initReadme: initializeReadme,
-  initSourceControl: initializeSourceControl,
-  initAmplify: initializeBackendManager
+  initSourceControlManager: initializeSourceControlManager,
+  initBackendManager: initializeBackendManager,
+  initMultienvManager: initializeMultiEnvManager,
+  initGlobalBackend: installBackendGlobally,
+  initReadme: initializeReadme
 };
 
 export const runTasks = async (tasks)=> {

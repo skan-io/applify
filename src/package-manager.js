@@ -33,7 +33,7 @@ export const initializePackageManager =
         description,
         license: 'MIT',
         engines: {
-          node: '>=6.2.0'
+          node: '>=10.0.0'
         },
         scripts: undefined,
         repository: repoOwner
@@ -64,5 +64,6 @@ export const initializePackageManager =
       }
 
       fs.writeFileSync(outFileName, json);
+      fs.chmodSync(outFileName, '755');
     }
   };

@@ -92,25 +92,36 @@ const createInitTasks = async ({
     ]
   });
 
-  if (initSourceControl && !initAmplify) {
+  if (initAmplify) {
     tasks.push({
-      type: 'initSourceControl',
+      type: 'initGlobalBackend',
+      description: 'Installing amplify cli globally...',
+      args: []
+    });
+  }
+
+  if (initSourceControl && !initAmplify) {
+    const withGitIgnore = true;
+    const branch = 'master';
+    tasks.push({
+      type: 'initSourceControlManager',
       description: 'Initialising git source control...',
-      args: [projectName, repoOwner]
+      args: [projectName, repoOwner, branch, withGitIgnore]
     });
   }
 
   if (initAmplify && !initSourceControl) {
+    const environment = 'master';
     tasks.push({
-      type: 'initAmplify',
+      type: 'initBackendManager',
       description: 'Initialising amplify...',
-      args: [projectName, repoOwner]
+      args: [environment]
     });
   }
 
   if (initSourceControl && initAmplify) {
     tasks.push({
-      type: 'initSourceAmplified',
+      type: 'initMultienvManager',
       description:
         'Initialising multi environment source control and amplify...',
       args: [projectName, repoOwner]
