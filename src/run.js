@@ -1,5 +1,5 @@
 import commander from 'commander';
-import {runInit} from './init';
+import {runInit} from './initializer';
 import pkgJson from './package.json';
 
 

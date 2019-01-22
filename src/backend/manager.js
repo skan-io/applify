@@ -1,8 +1,8 @@
 import {spawn} from 'child_process';
 import chalk from 'chalk';
 import {onExit} from '@rauschma/stringio';
-import {shellExec} from './exec';
-import {createAmplifyInitScriptWithEnv} from './utils';
+import {shellExec} from '../exec';
+import {createAmplifyInitScriptWithEnv} from '../utils';
 
 
 /* eslint no-console: 0 */

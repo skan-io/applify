@@ -1,10 +1,5 @@
-import fs from 'fs';
-import {join} from 'path';
-import chalk from 'chalk';
-import {parseDescription, parseMaintainers} from './utils';
-
-
-/* eslint no-console: 0 */
+import {addCustomResource} from '.';
+import {parseDescription, parseMaintainers} from '../utils';
 
 
 const readme = `
@@ -241,12 +236,11 @@ Any use of this software by any person will incur no liability on the owner of t
 `;
 
 
-export const initializeReadme =
+export const addReadme =
   // eslint-disable-next-line
   async (
     projectName, projectDescription, projectMaintainers, projectLogo, repoOwner
   )=> {
-    const outFileName = join(process.cwd(), 'README.md');
     const readmeString = readme
       .replace(
         '<?projectName?>',
@@ -273,6 +267,5 @@ export const initializeReadme =
         repoOwner
       );
 
-    fs.writeFileSync(outFileName, readmeString);
-    console.log('\n', chalk.green('Copied README.md'), '\n');
+    addCustomResource('README.md', readmeString);
   };

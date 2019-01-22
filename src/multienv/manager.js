@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import {
   initializeSourceControlManager,
   sourceControlPush
-} from './source-manager';
-import {initializeBackendManager} from './backend-manager';
-import {shellExec} from './exec';
+} from '../source/manager';
+import {initializeBackendManager} from '../backend/manager';
+import {shellExec} from '../exec';
 
 
 /* eslint no-console: 0 */
