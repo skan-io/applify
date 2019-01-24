@@ -2,7 +2,7 @@
 // eslint-disable-next-line
 export const createInitTasks = async (answers)=> {
   const {
-    initPkgManager, initSourceControl, initAmplify,
+    initPkgManager, initSourceControl, initAmplify, initStorybook,
     repoOwner, environmentNames, gitAccessToken,
     useSingleAwsProfile, awsProfiles,
     projectName, orgScope, projectDescription, projectMaintainers,
@@ -21,11 +21,11 @@ export const createInitTasks = async (answers)=> {
   //   });
   // }
   //
-  // tasks.push({
-  //   type: 'initPackageManager',
-  //   description: 'Initialising package manager...',
-  //   args: [initPkgManager, projectName, orgScope, projectDescription, repoOwner]
-  // });
+  tasks.push({
+    type: 'initPackageManager',
+    description: 'Initialising package manager...',
+    args: [initPkgManager, projectName, orgScope, projectDescription, repoOwner]
+  });
   //
   // tasks.push({
   //   type: 'addResourceReadme',
@@ -70,12 +70,20 @@ export const createInitTasks = async (answers)=> {
   //   description: 'Adding babel config...',
   //   args: []
   // });
-
+  //
+  tasks.push({
+    type: 'installWebpackDeps',
+    description: 'Installing webpack dependencies',
+    args: []
+  });
+  //
   // tasks.push({
-  //   type: 'installWebpackDeps',
-  //   description: 'Installing webpack dependencies',
+  //   type: 'addResourceWebpack',
+  //   description: 'Adding webpack config',
   //   args: []
   // });
+
+  // -------------- UPDATING -------------- //
 
   // if (initAmplify) {
   //   const environment = 'master';

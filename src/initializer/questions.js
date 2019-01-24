@@ -19,6 +19,12 @@ export const projectToolingQuestions = [
     name: 'initAmplify',
     message: 'Use amplify:',
     default: 'true'
+  },
+  {
+    type: 'confirm',
+    name: 'initStorybook',
+    message: 'Use storybook:',
+    default: 'true'
   }
 ];
 

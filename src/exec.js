@@ -1,3 +1,4 @@
+import ora from 'ora';
 import {exec, spawn as shellSpawn} from 'child_process';
 import {onExit} from '@rauschma/stringio';
 import {printInfo, printSuccess, printError} from './print';
@@ -14,15 +15,31 @@ export const shellExec = async (cmd)=> new Promise((resolve, reject)=> {
 });
 
 
+// eslint-disable-next-line max-statements
 export const execute = async (cmd, cmdInfo, throwOnError=false)=> {
+  const oraSpinner = ora();
+
   try {
-    printInfo(cmdInfo);
+    if (global.log) {
+      printInfo(cmdInfo);
+    } else {
+      oraSpinner.start(cmdInfo);
+    }
 
     const result = await shellExec(cmd);
 
-    printSuccess(result.stdout);
+    if (global.log) {
+      printSuccess(result.stdout);
+    } else {
+      oraSpinner.succeed();
+    }
+
     printError(result.stderr);
   } catch (err) {
+    if (!global.log) {
+      oraSpinner.fail();
+    }
+
     printError(err);
 
     if (throwOnError) {

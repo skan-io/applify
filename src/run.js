@@ -12,7 +12,18 @@ const run = async (argv)=> {
     .command('init')
     .alias('i')
     .description('Create a new react project')
-    .action(async ()=> await runInit());
+    .option('--log', 'Log task output')
+    .option('--reset', 'Reset any saved applify variables')
+    .action(async (cmd)=> {
+      global.log = cmd.log;
+
+      if (cmd.reset) {
+        // TODO delete the .applify directory
+        console.log(cmd.reset);
+      }
+
+      await runInit();
+    });
 
   await program.parse(argv);
 };

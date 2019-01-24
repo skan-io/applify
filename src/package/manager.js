@@ -19,10 +19,12 @@ const getNpmInitJson = async ()=> {
       `Wrote to ${process.cwd()}/package.json:\n\n`, ''
     );
 
-    if (stderr.includes('npm WARN using --force')) {
-      printWarning(stderr);
-    } else if (stderr) {
-      printError(stderr);
+    if (global.log) {
+      if (stderr.includes('npm WARN using --force')) {
+        printWarning(stderr);
+      } else if (stderr) {
+        printError(stderr);
+      }
     }
 
     return JSON.parse(outputstring);
@@ -54,7 +56,9 @@ export const initializePackageManager =
 
       addCustomResource('package.json', json);
 
-      printSuccess('------ Wrote NPM package.json ------');
-      printSuccess(json);
+      if (global.log) {
+        printSuccess('------ Wrote NPM package.json ------');
+        printSuccess(json);
+      }
     }
   };

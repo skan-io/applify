@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import figlet from 'figlet';
 
 /* eslint no-console: 0 */
 
@@ -34,3 +35,23 @@ export const printWarning = (message, caps=false)=> {
   }
   return;
 };
+
+
+// Print ascii art and Skan.io heading
+export const printHeadingAndArt = async ()=>
+  new Promise((resolve, reject)=> {
+    figlet.text('APPLIFY!', {
+      font: 'ANSI Shadow'
+    }, (error, text)=> {
+      if (error) {
+        console.log(`${error}\n\n`);
+        reject();
+        return;
+      }
+      console.log();
+      console.log();
+      console.log();
+      console.log(chalk.blue(text), '\n');
+      resolve();
+    });
+  });
