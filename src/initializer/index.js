@@ -10,22 +10,13 @@ import {
 } from './questions';
 import {runTasks} from '../tasks';
 import {createInitTasks} from '../tasks/create';
+import {runPreInitTasks} from './pre-init';
 
-
-const runPreflightChecks = async ()=> {
-  progress.init(4);
-
-  await checkAndCreateApplifyDir();
-  // await setTimeout(()=> progress.update(2), 2000);
-  // await setTimeout(()=> progress.update(3), 2000);
-
-  progress.finish();
-};
 
 // eslint-disable-next-line max-statements
 export const runInit = async ()=> {
   await printHeadingAndArt();
-  await runPreflightChecks();
+  await runPreInitTasks();
 
   const projectInfoAnswers = await prompt(projectInfoQuestions);
   const projectToolAnswers = await prompt(projectToolingQuestions);

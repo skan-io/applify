@@ -92,3 +92,26 @@ export const addCustomResource = (
     }
   }
 };
+
+
+export const checkDirectory = (dirName, root=dirname(process.argv[1]))=> ()=> {
+  const path = join(root, dirName);
+
+  if (fs.existsSync(path)) {
+    return {exists: {[path]: true}};
+  }
+
+  return {exists: {[path]: false}};
+};
+
+
+export const createDirectory = (dirName, root=dirname(process.argv[1]))=>
+  (pipe)=> {
+    const path = join(root, dirName);
+
+    if (pipe.exists[path]) {
+      return;
+    }
+
+    fs.mkdirSync(path);
+  };

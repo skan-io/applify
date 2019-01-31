@@ -18,7 +18,7 @@ import {addNpxScripts} from '../resources/npx';
 import {addBabelConfig} from '../resources/babel';
 
 
-const taskFunctions = {
+export const taskFunctions = {
   // Initialization
   initSourceControlManager: initializeSourceControlManager,
   initPackageManager: initializePackageManager,
@@ -34,6 +34,8 @@ const taskFunctions = {
   addResourceReadme: addReadme,
   addResourceBabelConfig: addBabelConfig
 };
+
+export const getTask = (type)=> taskFunctions[type] || null;
 
 // eslint-disable-next-line max-statements
 export const runTasks = async (tasks)=> {
