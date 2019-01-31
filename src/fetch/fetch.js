@@ -1,5 +1,5 @@
 import nodeFetch from 'node-fetch';
-import {printInfo, printSuccess, printError} from './print';
+import {printInfo, printSuccess, printError} from '../print';
 import {HTTP_OK, HTTP_OK_ALT} from './http-codes';
 
 

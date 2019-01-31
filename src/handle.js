@@ -1,13 +1,5 @@
 import {printSuccess, printWarning, printError} from './print';
-
-
-// Create consistent error messages
-export const applifyError = (code, message)=> {
-  const error = new Error(message);
-  error.code = code;
-
-  return error;
-};
+import {applifyError} from './errors';
 
 /**
  * Used as a try catch for task functions
@@ -30,6 +22,7 @@ export const handle = async (func, args)=> {
     }
 
     return pipe;
+
   } catch (err) {
 
     if (global.log) {
