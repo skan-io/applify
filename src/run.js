@@ -1,39 +1,38 @@
-import commander from 'commander';
-import pkgJson from './package.json';
-import {printHeadingAndArt} from './print';
-import init from './init';
+import ApplifyPromptPlugin from './plugins/ApplifyPromptPlugin';
+import ApplifyTasksPlugin from './plugins/ApplifyTasksPlugin';
+import {addQuestion, addTask} from './utils';
 
+const run = async ()=> {
+  const prompter = new ApplifyPromptPlugin();
+  const tasker = new ApplifyTasksPlugin();
+  const config = {tasks: tasker, prompt: prompter};
 
-const run = async (argv)=> {
-  const program = commander
-    .version(pkgJson.version, '-v, --version')
-    .description(pkgJson.description);
+  const pipe = {};
 
-  program
-    .command('init')
-    .alias('i')
-    .description('Create a new react project')
-    .option('--log', 'Log task output')
-    .option('--reset', 'Reset any saved applify variables')
-    .option('--config', 'Use a config file')
-    .action(async (cmd)=> {
+  await tasker.init(config, pipe);
+  await prompter.init(config, pipe);
 
-      global.log = cmd.log;
+  addQuestion(
+    async ()=> {
+      addTask(
+        async ()=> null,
+        tasker,
+        'Some new task to do',
+        'prompt',
+        'getPipe'
+      );
 
-      if (cmd.reset) {
-        // TODO delete the .applify directory
-        console.log('reset true');
-      }
-      if (cmd.config) {
-        // TODO read config from applify.config.js or applify.config.json
-        console.log('config true');
-      }
+      await tasker.getPipe().tasks.emit('run');
+    },
+    prompter,
+    'value',
+    'Whats my name:',
+    'nick',
+    'input',
+    []
+  );
 
-      await printHeadingAndArt();
-      await init();
-    });
-
-  await program.parse(argv);
+  await prompter.getPipe().prompt.emit('ask');
 };
 
 export default run;

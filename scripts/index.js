@@ -8,20 +8,17 @@ export default {
   clean: 'rimraf ./build',
 
   build: 'run build:*',
-  ['build:babel']: "./node_modules/@babel/cli/bin/babel.js src --out-dir build/pkg --ignore '**/*.test.js'",
-  ['build:files']: 'cp -R ./README.md ./LICENSE ./package.json ./src/templates build/pkg/',
+  ['build:babel']: "babel src --out-dir build/pkg --ignore '**/*.test.js'",
+  ['build:files']: 'cp -R ./README.md ./LICENSE ./package.json build/pkg/',
 
-  test: 'echo need test script',
+  test: 'run lint jest',
 
   cd: 'run clean build release',
   release: 'semantic-release',
 
   lint: 'run lint:*',
-  'lint:js': (
-    'eslint --report-unused-disable-directives --ignore-path .gitignore .'
-  ),
-  'lint:sass': 'sass-lint --no-exit --verbose',
-  'lint:md': 'remark -i .gitignore --no-stdout --use remark-lint *.md',
+  ['lint:js']: 'eslint --report-unused-disable-directives --ignore-path .gitignore .',
+  ['lint:md']: 'remark -i .gitignore --no-stdout --use remark-lint *.md',
 
   jest: 'jest --runInBand --no-cache'
 };
