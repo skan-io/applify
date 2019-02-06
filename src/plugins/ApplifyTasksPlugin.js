@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import Listr from 'listr';
+import BasePlugin from './BasePlugin';
 
 /* eslint no-underscore-dangle: 0 */
 
@@ -49,10 +50,9 @@ import Listr from 'listr';
  * @emit comlete id result
  * @extends EventEmitter
  */
-class ApplifyTasksPlugin extends EventEmitter {
-  // eslint-disable-next-line max-statements
+class ApplifyTasksPlugin extends BasePlugin {
   constructor(opts) {
-    super();
+    super(opts ? opts.debug : false);
 
     this.context = {
       success: [],
@@ -60,19 +60,10 @@ class ApplifyTasksPlugin extends EventEmitter {
       warning: []
     };
 
-    // This plugin has NO runnable functions
-    this._runnable = {};
-
     if (opts) {
-      this.debug = opts.debug === undefined ? false : opts.debug;
       this.style = opts.style ? opts.style : 'list';
     } else {
-      this.debug = false;
       this.style = 'list';
-    }
-
-    if (global.log) {
-      this.debug = true;
     }
 
     if (this.style === 'list') {
@@ -151,7 +142,7 @@ class ApplifyTasksPlugin extends EventEmitter {
 
           // On task completion the context will be updated and the result
           // of the task will be emitted with the task id
-          this.pipe.tasks.emit('complete', id, result);
+          this.getPipe().tasks.emit('complete', id, result);
         };
 
         // Tasks are bound to this plugin to access this.pipe
@@ -198,25 +189,16 @@ class ApplifyTasksPlugin extends EventEmitter {
   async init(config, pipe={}) {
     this.config = config;
     this.printer = config.printer;
-    this.log = global.log;
-    this.pipe = pipe;
+    this.setPipe(pipe);
 
-    if (!this.pipe.tasks) {
-      this.pipe.tasks = new EventEmitter();
+    if (!pipe.tasks) {
+      pipe.tasks = new EventEmitter();
     }
 
-    this.pipe.tasks.on('task', this._addTask.bind(this));
-    this.pipe.tasks.on('run', this._runTasks.bind(this));
+    pipe.tasks.on('task', this._addTask.bind(this));
+    pipe.tasks.on('run', this._runTasks.bind(this));
 
     this.emit('initialised');
-  }
-
-  getPipe() {
-    return this.pipe;
-  }
-
-  setPipe(pipe) {
-    this.pipe = pipe;
   }
 }
 

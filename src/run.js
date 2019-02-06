@@ -2,6 +2,7 @@ import ApplifyPromptPlugin from './plugins/ApplifyPromptPlugin';
 import ApplifyTasksPlugin from './plugins/ApplifyTasksPlugin';
 import {addQuestion, addTask} from './utils';
 
+
 const run = async ()=> {
   const prompter = new ApplifyPromptPlugin();
   const tasker = new ApplifyTasksPlugin();

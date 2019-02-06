@@ -12,13 +12,6 @@ jest.mock('listr', ()=> jest.fn().mockImplementation(()=> ({
 
 
 describe('ApplifyTasksPlugin - constructor', ()=> {
-  it('has no runnable functions', ()=> {
-    const tasker = new ApplifyTasksPlugin();
-
-    // eslint-disable-next-line no-underscore-dangle
-    expect(tasker._runnable).toEqual({});
-  });
-
   it('constructs with success and fail in context', ()=> {
     const tasker = new ApplifyTasksPlugin();
 
@@ -36,38 +29,11 @@ describe('ApplifyTasksPlugin - constructor', ()=> {
     expect(Listr).toHaveBeenCalledTimes(1);
   });
 
-  it('constructs with debug false by default', ()=> {
-    const tasker = new ApplifyTasksPlugin();
 
-    expect(tasker.debug).toBe(false);
-  });
+  it('constructs with optional style', ()=> {
+    const tasker = new ApplifyTasksPlugin({style: 'progress'});
 
-  it('constructs with debug true if global log is true', ()=> {
-    global.log = true;
-    const tasker = new ApplifyTasksPlugin();
-
-    expect(tasker.debug).toBe(true);
-  });
-
-  it('constructs with options', ()=> {
-    const tasker = new ApplifyTasksPlugin({debug: true, style: 'progress'});
-
-    expect(tasker.debug).toBe(true);
     expect(tasker.style).toBe('progress');
-  });
-
-  it('constructs with debug true if global log true but debug opt false', ()=> {
-    global.log = true;
-    const tasker = new ApplifyTasksPlugin({debug: false});
-
-    expect(tasker.debug).toBe(true);
-  });
-
-  it('constructs with debug false debug undefined in opts', ()=> {
-    global.log = undefined;
-    const tasker = new ApplifyTasksPlugin({});
-
-    expect(tasker.debug).toBe(false);
   });
 });
 

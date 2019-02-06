@@ -9,44 +9,11 @@ jest.mock('inquirer', ()=> ({
 
 
 describe('ApplifyPromptPlugin - constructor', ()=> {
-  it('has no runnable functions', ()=> {
-    const prompter = new ApplifyPromptPlugin();
-
-    // eslint-disable-next-line no-underscore-dangle
-    expect(prompter._runnable).toEqual({});
-  });
-
   it('constructs with empty questions and answers', ()=> {
     const prompter = new ApplifyPromptPlugin();
 
     expect(prompter.questions).toEqual([]);
     expect(prompter.answers).toEqual([]);
-  });
-
-  it('constructs with debug false by default', ()=> {
-    const prompter = new ApplifyPromptPlugin();
-
-    expect(prompter.debug).toBe(false);
-  });
-
-  it('constructs with debug option if passed one', ()=> {
-    const prompter = new ApplifyPromptPlugin({debug: true});
-
-    expect(prompter.debug).toBe(true);
-  });
-
-  it('constructs with debug true if global log true but debug opt false', ()=> {
-    global.log = true;
-    const prompter = new ApplifyPromptPlugin({debug: false});
-
-    expect(prompter.debug).toBe(true);
-  });
-
-  it('constructs with debug false debug undefined in opts', ()=> {
-    global.log = undefined;
-    const prompter = new ApplifyPromptPlugin({});
-
-    expect(prompter.debug).toBe(false);
   });
 });
 

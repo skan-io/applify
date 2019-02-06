@@ -1,4 +1,5 @@
 import EventEmitter from 'events';
+import BasePlugin from './BasePlugin';
 import {prompt} from 'inquirer';
 
 /* eslint no-underscore-dangle: 0 */
@@ -49,26 +50,13 @@ import {prompt} from 'inquirer';
  * @emit  response id answers
  * @extends EventEmitter
  */
-class ApplifyPromptPlugin extends EventEmitter {
+class ApplifyPromptPlugin extends BasePlugin {
   constructor(opts) {
-    super(opts.debug);
+    super(opts ? opts.debug : false);
 
     this.questions = [];
     this.answers = [];
     this.questionMap = new Map();
-
-    // This plugin has NO runnable functions
-    this._runnable = {};
-
-    if (opts) {
-      this.debug = opts.debug === undefined ? false : opts.debug;
-    } else {
-      this.debug = false;
-    }
-
-    if (global.log) {
-      this.debug = true;
-    }
   }
 
   /**
@@ -85,7 +73,7 @@ class ApplifyPromptPlugin extends EventEmitter {
 
       // Emit the question id the value the answer is assigned to and the
       // answer itself
-      this.pipe.prompt.emit('response', id, value, this.answers[id]);
+      this.getPipe().prompt.emit('response', id, value, this.answers[id]);
       this.questionMap.set(id, undefined);
     }
 
@@ -146,25 +134,17 @@ class ApplifyPromptPlugin extends EventEmitter {
   async init(config, pipe={}) {
     this.config = config;
     this.printer = config.printer;
-    this.pipe = pipe;
+    this.setPipe(pipe);
 
-    if (!this.pipe.prompt) {
-      this.pipe.prompt = new EventEmitter();
+    if (!pipe.prompt) {
+      pipe.prompt = new EventEmitter();
     }
 
-    this.pipe.prompt.on('question', this._addQuestion.bind(this));
-    this.pipe.prompt.on('ask', this._prompt.bind(this));
+    pipe.prompt.on('question', this._addQuestion.bind(this));
+    pipe.prompt.on('ask', this._prompt.bind(this));
 
     // Initialisation complete
     this.emit('initialised');
-  }
-
-  getPipe() {
-    return this.pipe;
-  }
-
-  setPipe(pipe) {
-    this.pipe = pipe;
   }
 }
 
