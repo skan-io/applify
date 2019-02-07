@@ -51,7 +51,7 @@ export const printHeadingAndArt = async ()=>
       console.log();
       console.log();
       console.log();
-      console.log(chalk.blue(text), '\n');
+      console.log(chalk.magenta(text), '\n');
       resolve();
     });
   });

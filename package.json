@@ -1,63 +1,48 @@
 {
   "name": "@skan-io/applify",
-  "version": "0.0.0-semantically-released",
-  "description": "React application template generator",
   "private": false,
-  "engines": {
-    "node": ">=10.0.0"
-  },
+  "version": "0.0.0-semantically-released",
+  "description": "Configurable React application template generator",
+  "main": "./applify.js",
   "bin": {
     "applify": "./applify.js"
   },
-  "main": "./run.js",
+  "engines": {
+    "node": ">=10.0.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/skan-io/applify.git"
   },
-  "author": "Skan Admin <admin@skan.io> (https://skan.io/)",
+  "keywords": [
+    "react",
+    "generator",
+    "template"
+  ],
+  "author": "Nick Manks",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/skan-io/applify/issues"
   },
   "homepage": "https://github.com/skan-io/applify#readme",
   "dependencies": {
-    "asciify-image": "0.1.3",
+    "@rauschma/stringio": "1.4.0",
     "chalk": "2.4.2",
     "commander": "2.19.0",
     "figlet": "1.2.1",
-    "get-aws-profiles": "^1.0.5",
     "inquirer": "6.2.1",
-    "listr": "0.14.3",
-    "node-fetch": "2.3.0",
-    "ora": "3.0.0"
+    "listr": "^0.14.3",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "@babel/cli": "7.2.3",
-    "@babel/core": "7.2.2",
-    "@babel/node": "7.2.2",
-    "@babel/plugin-proposal-object-rest-spread": "7.2.0",
-    "@babel/plugin-proposal-optional-catch-binding": "7.2.0",
-    "@babel/plugin-proposal-throw-expressions": "7.2.0",
-    "@babel/plugin-transform-runtime": "7.2.0",
-    "@babel/preset-env": "7.2.3",
-    "@babel/register": "7.0.0",
-    "@rauschma/stringio": "1.4.0",
-    "@skan-io/eslint-config-base": "1.0.1",
-    "babel-cli": "6.26.0",
-    "babel-core": "6.26.3",
-    "babel-eslint": "10.0.1",
-    "babel-jest": "23.6.0",
-    "commitizen": "3.0.5",
+    "@skan-io/babel-config-nodejs": "1.0.1",
+    "@skan-io/eslint-config-base": "^1.0.2",
+    "@skan-io/jest-config-base": "^1.0.0",
+    "@skan-io/release-config": "^1.0.0",
+    "@skan-io/remark-config": "^1.0.1",
     "cz-conventional-changelog": "2.1.0",
-    "eslint": "5.12.1",
-    "eslint-plugin-babel": "5.3.0",
-    "jest-cli": "23.6.0",
-    "npx-run": "2.1.2",
-    "remark-cli": "6.0.1",
-    "remark-lint": "6.0.4",
-    "remark-preset-lint-recommended": "3.0.2",
-    "rimraf": "2.6.3",
-    "semantic-release": "15.13.3"
+    "npx-run": "^2.1.2",
+    "rimraf": "^2.6.3"
   },
   "config": {
     "commitizen": {

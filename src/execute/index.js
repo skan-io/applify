@@ -56,7 +56,7 @@ export const execute = async ({cmd, info}, throwOnError=true)=> {
     if (throwOnError) {
       throw applifyError(
         EXECUTION_ERROR.code,
-        `${EXECUTION_ERROR.message}: ${info} failed with commande ${cmd}`
+        `${EXECUTION_ERROR.message}: ${info} failed with command ${cmd}`
       );
     }
   }

@@ -13,9 +13,10 @@ const run = async (argv)=> {
     .command('init')
     .alias('i')
     .description('Create a new react project')
-    .option('--log', 'Log task output')
-    .option('--reset', 'Reset any saved applify variables')
-    .option('--config', 'Use a config file')
+    .option('-l, --log', 'Log task output')
+    .option('-r, --reset', 'Reset any saved applify variables')
+    .option('-c, --config', 'Use a config file')
+    .option('-d, --dev', 'Use development mode')
     .action(async (cmd)=> {
 
       global.log = cmd.log;
@@ -30,7 +31,7 @@ const run = async (argv)=> {
       }
 
       await printHeadingAndArt();
-      await init();
+      await init(cmd.dev);
     });
 
   await program.parse(argv);
