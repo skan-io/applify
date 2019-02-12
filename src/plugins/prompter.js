@@ -12,14 +12,24 @@ import {START_QUESTION, END_QUESTION} from '../events';
 // Standard build questions function used by the store, except we dont need
 // to do anything because we use the `createQuestion` helper across our
 // default plugins
-export const buildQuestions = (questions)=> questions;
+// eslint-disable-next-line
+export const buildQuestions = (questions, store)=> questions;
 
 
 // Standard prompt questions function used by the store
 export const runQuestions = async (questions, store)=> {
   for (const question of questions) {
+    let answer = null;
     store.emit(START_QUESTION, question);
-    const answer = await prompt(question);
+
+
+    if (typeof question === 'function') {
+      // Runtime question parameters
+      answer = await prompt(question(store));
+    } else {
+      answer = await prompt(question);
+    }
+
     // Update the store with new answers
     store.answers = store.answers ? {...store.answers, ...answer} : answer;
     store.emit(END_QUESTION, question);
@@ -37,4 +47,15 @@ export const createQuestion =
     default: defaultValue,
     name: value,
     choices
+  });
+
+// Similar to above but allows for creating of question variables at runtime
+export const createRuntimeQuestion =
+  // eslint-disable-next-line
+  (question, type, value, defaultValue, choices=()=>[])=> (store)=> ({
+    message: question(store),
+    type: type(store),
+    default: defaultValue(store),
+    name: value(store),
+    choices: choices(store)
   });

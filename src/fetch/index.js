@@ -1,5 +1,4 @@
 import nodeFetch from 'node-fetch';
-import {printInfo, printSuccess, printError} from '../print';
 import {HTTP_OK, HTTP_OK_ALT} from './http-codes';
 
 
@@ -17,8 +16,6 @@ export const fetch = async (
   url, method, body, token=null, type=null, throwOnError=false
 )=> {
   try {
-    printInfo(`Attempting to ${method} ${body} to ${url} ...`);
-
     const response = await nodeFetch(url, {
       method,
       headers: {
@@ -29,8 +26,11 @@ export const fetch = async (
     });
 
     if (response.status === HTTP_OK || response.status === HTTP_OK_ALT) {
-      printSuccess(`${method} to ${url} Successful`);
-      return response;
+      return {
+        printSuccess: `${method} to ${url} Successful`,
+        printInfo: `Attempting to ${method} ${body} to ${url} ...`,
+        response: response.json ? await response.json() : response
+      };
     }
 
     throw createResponseError(
@@ -39,8 +39,6 @@ export const fetch = async (
     );
 
   } catch ({message, code}) {
-    printError(`${code} ${message}`);
-
     if (throwOnError) {
       throw createResponseError(message, code);
     }

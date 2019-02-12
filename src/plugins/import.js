@@ -1,11 +1,31 @@
-import {applifyError} from '../error';
-import {PLUGIN_IMPORT_ERROR} from '../error/error-codes';
 import {execute} from '../execute';
+import {applifyError} from '../error';
+import {PLUGIN_IMPORT_ERROR, PLUGINS_OUT_OF_SYNC} from '../error/error-codes';
+import {singleLine} from '../utils/strings';
 
 
-export const importPlugin = async (store, plugin)=> {
+export const importPlugin = async (store, config, role)=> {
   if (!store.importedPlugins) {
     store.importedPlugins = [];
+  }
+
+  const plugin = config[role];
+
+  if (store.importedPlugins) {
+    for (const importedPlugin of store.importedPlugins) {
+      if (
+        importedPlugin.role === role
+        && importedPlugin.plugin !== plugin
+      ) {
+        throw applifyError(
+          PLUGINS_OUT_OF_SYNC.code,
+          singleLine`${PLUGINS_OUT_OF_SYNC.message}:
+             ${' '}failed with '${role}: ${plugin}' (HINT: It seems your plugin config
+             ${' '}has changed since you last ran applify and this will break plugin
+             ${' '}dependencies - try running with --reset option)`
+        );
+      }
+    }
   }
 
   if (plugin.startsWith('@skan-io/applify')) {
@@ -13,12 +33,14 @@ export const importPlugin = async (store, plugin)=> {
 
     try {
       const importedPkg = await import(`./${pkg}`);
-      store.importedPlugins.push(plugin);
+      store.importedPlugins.push({role, plugin});
+      store[role] = importedPkg;
       return importedPkg;
     } catch (err) {
       throw applifyError(
         PLUGIN_IMPORT_ERROR.code,
-        `${PLUGIN_IMPORT_ERROR.message}: failed with ${err}`
+        `${PLUGIN_IMPORT_ERROR.message}: failed with ${err}`,
+        err.stack
       );
     }
 
@@ -39,6 +61,7 @@ export const importPlugin = async (store, plugin)=> {
     }
 
     store.importedPlugins.push(plugin);
+    store[role] = importedPkg;
     return importedPkg;
   }
 };

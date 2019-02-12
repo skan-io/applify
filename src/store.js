@@ -1,5 +1,9 @@
+import fs from 'fs';
 import EventEmitter from 'events';
+import {join} from 'path';
 import {ADD_TASK, ADD_QUESTION} from './events';
+import {printDebugOutput} from './print';
+import {stringify} from './utils/strings';
 
 
 class Store extends EventEmitter {
@@ -9,6 +13,8 @@ class Store extends EventEmitter {
 
     this.tasksList = [];
     this.questionsList = [];
+    this.print = [];
+    this.completedSteps = [];
   }
 
   set(operator, plugin) {
@@ -32,6 +38,13 @@ class Store extends EventEmitter {
     await this.tasker.runTasks(tasks, this);
     // Clear the tasks
     this.tasksList = [];
+
+    if (this.print.length && global.log) {
+      printDebugOutput(this.print);
+      this.print = [];
+    }
+
+    this.updateTempStore();
   }
 
   async runQuestions() {
@@ -40,6 +53,18 @@ class Store extends EventEmitter {
     await this.prompter.runQuestions(questions, this);
     // Clear the questions
     this.questionsList = [];
+
+    this.updateTempStore();
+  }
+
+  updateTempStore() {
+    const applifyDir = join(process.cwd(), '.applify');
+    const applifyTempFile = join(applifyDir, 'temp.json');
+
+    fs.writeFileSync(
+      applifyTempFile,
+      stringify(this)
+    );
   }
 }
 

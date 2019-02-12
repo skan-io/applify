@@ -37,28 +37,29 @@ export const shellExec = async (cmd)=> new Promise((resolve, reject)=> {
  * @return {Promise}                      When resolved the command will
  *                                        have been executed
  */
+// eslint-disable-next-line max-statements
 export const execute = async ({cmd, info}, throwOnError=true)=> {
   try {
-    if (global.log) {
-      printInfo(info);
-    }
-
     const result = await shellExec(cmd);
 
-    if (global.log) {
-      printSuccess(result.stdout);
-    }
+    return {
+      result,
+      printInfo: info,
+      printSuccess: result.stdout,
+      printError: result.stderr
+    };
 
-    printError(result.stderr);
   } catch (err) {
-    printError(err);
-
     if (throwOnError) {
       throw applifyError(
         EXECUTION_ERROR.code,
         `${EXECUTION_ERROR.message}: ${info} failed with command ${cmd}`
       );
     }
+
+    return {
+      printError: err
+    };
   }
 };
 
@@ -87,6 +88,7 @@ export const execute = async ({cmd, info}, throwOnError=true)=> {
 export const spawn = async (
   {cmd, args, info}, stdio=[process.stdin, process.stdout, process.stderr]
 )=> {
+  // TODO make conform to task printing
   if (global.log) {
     printInfo(info);
   }

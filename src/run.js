@@ -21,17 +21,12 @@ const run = async (argv)=> {
 
       global.log = cmd.log;
 
-      if (cmd.reset) {
-        // TODO delete the .applify directory
-        console.log('reset true');
-      }
-      if (cmd.config) {
-        // TODO read config from applify.config.js or applify.config.json
-        console.log('config true');
-      }
-
       await printHeadingAndArt();
-      await init(cmd.dev);
+      await init({
+        devMode: cmd.dev,
+        reset: cmd.reset,
+        useConfig: cmd.config
+      });
     });
 
   await program.parse(argv);

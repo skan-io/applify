@@ -10,7 +10,7 @@ import {START_TASK, END_TASK} from '../events';
 
 
 // Standard build task function used by tasker operator on the store.
-export const buildTasks = (tasks, concurrent=true)=> {
+export const buildTasks = (tasks, store, concurrent=false)=> {
   const taskList = new Listr([], {concurrent});
 
   // For nested tasks
@@ -26,10 +26,20 @@ export const buildTasks = (tasks, concurrent=true)=> {
       taskList.add({
         title: task.description,
         // Will be passed the store context at runtime
-        task: async (store)=> {
-          store.emit(START_TASK, task);
-          await task.task(store);
-          store.emit(END_TASK, task);
+        task: async (ctx)=> {
+          ctx.emit(START_TASK, task);
+
+          // The default task runner will out put a log object
+          const {
+            printInfo, printWarning, printError, printSuccess
+          } = await task.task(ctx);
+
+          // Logs to be printed after tasks complete
+          if (global.log) {
+            ctx.print.push({printInfo, printWarning, printError, printSuccess});
+          }
+
+          ctx.emit(END_TASK, task);
         }
       });
     }

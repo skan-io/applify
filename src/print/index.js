@@ -36,6 +36,13 @@ export const printWarning = (message, caps=false)=> {
   return;
 };
 
+export const printDim = (message, colour)=> {
+  if (message && message !== '') {
+    console.log(chalk.dim(chalk[colour](message)));
+  }
+  return;
+};
+
 
 // Print ascii art and Skan.io heading
 export const printHeadingAndArt = async ()=>
@@ -55,3 +62,38 @@ export const printHeadingAndArt = async ()=>
       resolve();
     });
   });
+
+export const newLine = ()=> console.log('\n');
+
+// eslint-disable-next-line
+export const printDebugOutput = (outputs)=> {
+  if (outputs.length) {
+    console.log(chalk.blue('\n============ DEBUG ============\n'));
+  }
+
+  for (const output of outputs) {
+    const {
+      printInfo: info,
+      printWarning: warning,
+      printError: error,
+      printSuccess: success
+    } = output;
+
+    if (info) {
+      printInfo(info);
+    }
+    if (error) {
+      printError(error);
+    }
+    if (success) {
+      printSuccess(success);
+    }
+    if (warning) {
+      printWarning(warning);
+    }
+  }
+
+  if (outputs.length) {
+    console.log(chalk.blue('\n===============================\n'));
+  }
+};
