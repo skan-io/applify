@@ -68,15 +68,6 @@ const getRepoDetails = async (store, config)=> {
     )
   );
 
-  store.addQuestion(
-    store.prompter.createQuestion(
-      'Is this a private project: ',
-      'confirm',
-      'privatePackage',
-      store.answers.privatePackage || false
-    )
-  );
-
   await store.runQuestions();
 };
 
@@ -125,6 +116,7 @@ const getInitialiseGitRemoteTask = ()=> ({
 
         storeCtx.gitUrl = response.git_url;
         storeCtx.gitSSHUrl = response.ssh_url;
+        storeCtx.gitHtmlUrl = response.html_url;
 
         return {
           printInfo: info,
@@ -294,14 +286,14 @@ export const checkRestore = async (store, config)=> {
       question: 'Branches to initialise (comma seperated): ',
       field: 'initialBranches'
     },
-    {question: 'Is this a private project: ', field: 'privatePackage'},
     {
       question: 'Enter your GitHub personal access token: ',
       field: 'gitAccessToken'
     }
   ];
   const data = [
-    'gitInitialised', 'gitUpToDate', 'gitRemoteAdded', 'gitUrl', 'gitSSHUrl'
+    'gitInitialised', 'gitUpToDate', 'gitRemoteAdded',
+    'gitUrl', 'gitSSHUrl', 'gitHtmlUrl'
   ];
   let restoreSuccess = true;
 
@@ -315,8 +307,8 @@ export const checkRestore = async (store, config)=> {
           // eslint-disable-next-line
           `Source plugin required ${answer.field} to be defined - reinitialising...`
         );
+
         restoreSuccess = false;
-        break;
       }
     }
     for (const field of data) {
@@ -324,8 +316,8 @@ export const checkRestore = async (store, config)=> {
         printWarning(
           `Source plugin required ${field} to be defined - reinitialising...`
         );
+        
         restoreSuccess = false;
-        break;
       }
     }
   } else {
@@ -361,3 +353,6 @@ export const init = async (store, config)=> {
     store.completedSteps.push('init:source');
   }
 };
+
+// TODO run - create branches (with amplify envs) and push all changes, install
+// and setup commitizen

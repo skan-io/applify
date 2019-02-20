@@ -25,7 +25,7 @@ export const runQuestions = async (questions, store)=> {
 
     if (typeof question === 'function') {
       // Runtime question parameters
-      answer = await prompt(question(store));
+      answer = await prompt(await question(store));
     } else {
       answer = await prompt(question);
     }
@@ -52,10 +52,10 @@ export const createQuestion =
 // Similar to above but allows for creating of question variables at runtime
 export const createRuntimeQuestion =
   // eslint-disable-next-line
-  (question, type, value, defaultValue, choices=()=>[])=> (store)=> ({
-    message: question(store),
-    type: type(store),
-    default: defaultValue(store),
-    name: value(store),
-    choices: choices(store)
+  (question, type, value, defaultValue, choices=()=>[])=> async (store)=> ({
+    message: await question(store),
+    type: await type(store),
+    default: await defaultValue(store),
+    name: await value(store),
+    choices: await choices(store)
   });

@@ -115,22 +115,36 @@ const getSteps = (store, steps)=> {
   return steps;
 };
 
-// Initialise all the plugins required by operators and steps
-// eslint-disable-next-line
-const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
-  // Can pass a custom store class/object in also
-  const store = customStore ? customStore : new Store();
-
+const setFilePaths = (store)=> {
   if (!store.applifyDir) {
     store.applifyDir = join(process.cwd(), '.applify');
   }
   if (!store.applifyTempFile) {
     store.applifyTempFile = join(store.applifyDir, 'temp.json');
   }
+  if (!store.workingDir) {
+    store.workingDir = process.cwd();
+  }
+  if (!store.packageJsonFile) {
+    store.packageJsonFile = join(process.cwd(), 'package.json');
+  }
+};
+
+// Initialise all the plugins required by operators and steps
+// eslint-disable-next-line
+const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
+  // Can pass a custom store class/object in also
+  const store = customStore ? customStore : new Store();
+  store.answers = {};
+
+  setFilePaths(store);
 
   // Get config
   // TODO get config from elsewhere
-  const config = customConfig ? customConfig : defaultConfig();
+  const config = customConfig
+    // Use parts from the default config if not found in customConfig
+    ? {...defaultConfig(), ...customConfig}
+    : defaultConfig();
 
   // Setup the store operators
   await setupStoreOperatorPlugins(store, config);
@@ -185,7 +199,7 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
 
   await store.runQuestions();
 
-  // console.log({store});
+  console.log({store});
 };
 
 export default init;

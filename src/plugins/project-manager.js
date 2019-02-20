@@ -146,6 +146,7 @@ const getProjectDetails = async (store)=> {
       process.cwd().split(sep).pop()
     )
   );
+
   store.addQuestion(
     store.prompter.createQuestion(
       'What is the project scope: ',
@@ -155,21 +156,54 @@ const getProjectDetails = async (store)=> {
       'none'
     )
   );
+
   store.addQuestion(
     store.prompter.createRuntimeQuestion(
       ()=> 'What is the project description:',
       ()=> 'input',
       ()=> 'projectDescription',
       (storeCtx)=>
+        storeCtx.answers.projectDescription ||
         `A react boilerplate application for ${storeCtx.answers.projectName}`
     )
   );
+
   store.addQuestion(
     store.prompter.createQuestion(
-      'Who are the project maintainers (comma seperated):',
+      'What is the project license: ',
       'input',
-      'projectMaintainers',
-      'none'
+      'projectLicense',
+      store.answers.projectLicense || 'MIT'
+    )
+  );
+
+  store.addQuestion(
+    store.prompter.createRuntimeQuestion(
+      ()=> 'Who is the project author: ',
+      ()=> 'input',
+      ()=> 'projectAuthor',
+      async (storeCtx)=> {
+        try {
+          const {result} = await execute({
+            cmd: 'npm profile get fullname',
+            info: 'Get npm profile name'
+          });
+
+          return storeCtx.answers.projectAuthor
+          || result.stdout.replace(/(\r\n|\n|\r)/gm, '');
+        } catch {
+          return undefined;
+        }
+      }
+    )
+  );
+
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Is this a private project: ',
+      'confirm',
+      'privatePackage',
+      store.answers.privatePackage || false
     )
   );
 
@@ -183,11 +217,13 @@ export const checkRestore = async (store)=> {
     {question: 'Use npm or yarn: ', field: 'packageManager'},
     {question: 'What is the project name: ', field: 'projectName'},
     {question: 'What is the project scope: ', field: 'orgScope'},
-    {question: 'What is the project description:', field: 'projectDescription'},
     {
-      question: 'Who are the project maintainers (comma seperated):',
-      field: 'projectMaintainers'
-    }
+      question: 'What is the project description: ',
+      field: 'projectDescription'
+    },
+    {question: 'What is the project license: ', field: 'projectLicense'},
+    {question: 'Who is the project author: ', field: 'projectAuthor'},
+    {question: 'Is this a private project: ', field: 'privatePackage'}
   ];
   const data = ['nodeVersionConfirmed', 'packageManagerVersionConfirmed'];
   let restoreSuccess = true;
@@ -198,8 +234,8 @@ export const checkRestore = async (store)=> {
         // eslint-disable-next-line
         `Project plugin required ${answer.field} to be defined - reinitialising...`
       );
+
       restoreSuccess = false;
-      break;
     }
   }
   for (const field of data) {
@@ -207,8 +243,8 @@ export const checkRestore = async (store)=> {
       printWarning(
         `Project plugin required ${field} to be defined - reinitialising...`
       );
+
       restoreSuccess = false;
-      break;
     }
   }
 
