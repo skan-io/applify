@@ -1,9 +1,7 @@
-import fs from 'fs';
 import {join} from 'path';
 import Store from './store';
 import defaultConfig from './default.config';
 import {importPlugin} from './plugins/import';
-import {createApplifyDirTask} from './plugins/preloader';
 import {
   STORE_INIT,
   STORE_OPERATOR_SETUP,
@@ -11,37 +9,8 @@ import {
   STORE_PRELOADED
 } from './events';
 import {newLine} from './print';
+import {resetTempFiles} from './reset';
 
-
-const resetTempFiles = async (store)=> {
-  store.addTask({
-    type: 'batch',
-    description: 'Reset applify temp files',
-    children: [
-      createApplifyDirTask(store),
-      {
-        type: 'task',
-        description: `clear ${store.applifyTempFile}`,
-        task: ()=> {
-          try {
-            fs.writeFileSync(store.applifyTempFile, JSON.stringify({}));
-
-            return {
-              printInfo: `Reset ${store.applifyTempFile}`,
-              printSuccess: `Reset ${store.applifyTempFile} to {}`
-            };
-          } catch (err) {
-            return {
-              printError: err
-            };
-          }
-        }
-      }
-    ]
-  });
-
-  await store.runTasks();
-};
 
 // Set up the operators
 // Operators are the core functionality of applify
@@ -198,8 +167,6 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
   newLine();
 
   await store.runQuestions();
-
-  console.log({store});
 };
 
 export default init;

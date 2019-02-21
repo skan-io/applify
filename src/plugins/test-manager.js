@@ -1,28 +1,54 @@
 import {STEP_COMPLETE} from '../events';
+import {checkFields} from './utils';
+import {printInfo, printDim} from '../print';
 
 
 const COVERAGE_PERCENTAGE = 100;
 
+export const requiredAnswers = [
+  {question: 'Would you like to use jest testing: ', field: 'useJest'},
+  {question: 'Would you like to use enzyme testing: ', field: 'useEnzyme'},
+  {
+    question: 'Would you like to use coverage checks: ',
+    field: 'useCodeCoverage'
+  },
+  {question: 'Statements %: ', field: 'statementsPercentageCoverage'},
+  {question: 'Functions %: ', field: 'functionsPercentageCoverage'},
+  {question: 'Branches %: ', field: 'branchesPercentageCoverage'},
+  {question: 'Lines %: ', field: 'linesPercentageCoverage'}
+];
 
-const checkRestore = async ()=> null;
+export const requiredFields = ['jestInstalled', 'enzymeInstalled'];
+
 
 const getShouldTest = async (store)=> {
   store.addQuestion(
     store.prompter.createQuestion(
-      'Use jest testing: ',
+      'Would you like to use jest testing: ',
       'confirm',
       'useJest',
       true
     )
   );
 
+  printInfo('\n-------- TEST DETAILS ---------\n');
+
   await store.runQuestions();
 };
 
-const getShouldCoverage = async (store)=> {
+const getShouldCoverageAndEnzyme = async (store)=> {
   store.addQuestion(
     store.prompter.createQuestion(
-      'Use coverage checks: ',
+      'Would you like to use enzyme testing: ',
+      'confirm',
+      'useEnzyme',
+      true
+    )
+  );
+
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Would you like to use coverage checks: ',
       'confirm',
       'useCodeCoverage',
       true
@@ -37,7 +63,7 @@ const getCoverageDetails = async (store)=> {
     store.prompter.createQuestion(
       'Statements %: ',
       'input',
-      'statementPercentageCoverage',
+      'statementsPercentageCoverage',
       COVERAGE_PERCENTAGE
     )
   );
@@ -46,7 +72,7 @@ const getCoverageDetails = async (store)=> {
     store.prompter.createQuestion(
       'Functions %: ',
       'input',
-      'functionPercentageCoverage',
+      'functionsPercentageCoverage',
       COVERAGE_PERCENTAGE
     )
   );
@@ -59,7 +85,7 @@ const getCoverageDetails = async (store)=> {
       COVERAGE_PERCENTAGE
     )
   );
-  
+
   store.addQuestion(
     store.prompter.createQuestion(
       'Lines %: ',
@@ -73,9 +99,9 @@ const getCoverageDetails = async (store)=> {
 };
 
 const runJestInstallationTasks = async (store)=> {
-  store.addTask({
+  const task = {
     type: 'batch',
-    description: 'Install jest testing',
+    description: 'Install jest and enzyme dependencies',
     children: [
       {
         type: 'task',
@@ -83,7 +109,7 @@ const runJestInstallationTasks = async (store)=> {
         task: async (storeCtx)=> {
           if (!storeCtx.jestInstalled) {
             const output = await storeCtx.packageInstaller.install(
-              '@skan-io/jest-config-base'
+              '@skan-io/jest-config-base react-test-renderer'
             );
 
             storeCtx.jestInstalled = true;
@@ -95,24 +121,86 @@ const runJestInstallationTasks = async (store)=> {
         }
       }
     ]
-  });
+  };
+
+  if (store.answers.useEnzyme) {
+    task.children.push({
+      type: 'task',
+      description: 'install enzyme dependencies',
+      task: async (storeCtx)=> {
+        if (!storeCtx.enzymeInstalled) {
+          const output = await storeCtx.packageInstaller.install(
+            'enzyme enzyme-adapter-react-16'
+          );
+
+          storeCtx.enzymeInstalled = true;
+
+          return output;
+        }
+
+        return {};
+      }
+    });
+  }
+
+  store.addTask(task);
+  await store.runTasks();
 };
 
-export const init = async (store)=> {
-  if (store.completedSteps.some((step)=> step === 'init:test')) {
+const setNoCoverageAnswers = (store)=> {
+  store.answers.statementsPercentageCoverage = 0;
+  store.answers.functionsPercentageCoverage = 0;
+  store.answers.branchesPercentageCoverage = 0;
+  store.answers.linesPercentageCoverage = 0;
+};
+
+// eslint-disable-next-line max-statements
+export const checkRestore = async (store)=> {
+  const restoreSuccess = checkFields(
+    store, 'Test', requiredAnswers, requiredFields
+  );
+
+  if (restoreSuccess) {
+    printDim('\n-------- TEST DETAILS ---------\n', 'blue');
+
+    for (const answer of requiredAnswers) {
+      printDim(`${answer.question} ${store.answers[answer.field]}`, 'white');
+    }
+  } else {
+    // eslint-disable-next-line no-use-before-define
+    await init(store, undefined, false);
+  }
+};
+
+// eslint-disable-next-line max-statements
+export const init = async (store, config, restore=true)=> {
+  if (
+    restore
+    && store.completedSteps.some((step)=> step === 'init:test')
+  ) {
     await checkRestore(store);
   } else {
 
     await getShouldTest(store);
 
     if (store.answers.useJest) {
-      await getShouldCoverage(store);
+      await getShouldCoverageAndEnzyme(store);
 
       if (store.answers.useCodeCoverage) {
         await getCoverageDetails(store);
+      } else {
+        setNoCoverageAnswers(store);
+      }
+
+      if (!store.answers.useEnzyme) {
+        store.enzymeInstalled = false;
       }
 
       await runJestInstallationTasks(store);
+    } else {
+      store.jestInstalled = false;
+      store.enzymeInstalled = false;
+      setNoCoverageAnswers(store);
     }
 
     store.emit(STEP_COMPLETE, 'init:test');

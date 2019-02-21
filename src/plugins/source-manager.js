@@ -1,6 +1,6 @@
 import {execute} from '../execute';
 import {fetch} from '../fetch';
-import {printInfo, printWarning, printDim} from '../print';
+import {printInfo, printDim} from '../print';
 import {applifyError} from '../error';
 import {
   REPO_ALREADY_EXISTS,
@@ -10,7 +10,27 @@ import {
   GIT_PULL_ERROR
 } from '../error/error-codes';
 import {STEP_COMPLETE} from '../events';
-import {expectDefined} from './utils';
+import {expectDefined, checkFields} from './utils';
+
+
+export const requiredAnswers = [
+  {question: 'Would you like to use commitizen: ', field: 'useCommitizen'},
+  {question: 'Who owns the project (username): ', field: 'repoOwner'},
+  {question: 'Project org name: ', field: 'repoOrg'},
+  {
+    question: 'Branches to initialise (comma seperated): ',
+    field: 'initialBranches'
+  },
+  {
+    question: 'Enter your GitHub personal access token: ',
+    field: 'gitAccessToken'
+  }
+];
+
+export const requiredFields = [
+  'gitInitialised', 'gitUpToDate', 'gitRemoteAdded',
+  'gitUrl', 'gitSSHUrl', 'gitHtmlUrl'
+];
 
 
 const getShouldUseGit = async (store)=> {
@@ -157,13 +177,7 @@ const getInitialiseGitLocalTask = ()=> ({
   task: async (store)=> {
     if (!store.gitInitialised) {
       const output = await execute({cmd: 'git init .', info: 'Git init'});
-      const {
-        result,
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      } = output;
+      const {result} = output;
 
       if (result.stderr) {
         throw applifyError(
@@ -176,12 +190,7 @@ const getInitialiseGitLocalTask = ()=> ({
       store.gitInitialised = true;
       store.gitUpToDate = false;
 
-      return {
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      };
+      return output;
     }
 
     return {};
@@ -197,32 +206,11 @@ const getAddGitRemoteTask = ()=> ({
       const output = await execute({
         cmd: `git remote add origin ${store.gitSSHUrl}`,
         info: 'Add git ssh remote'
-      });
-
-      const {
-        result,
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      } = output;
-
-      if (result.stderr) {
-        throw applifyError(
-          GIT_INIT_ERROR.code,
-          // eslint-disable-next-line
-          `${GIT_INIT_ERROR.message}: failed with ${result.stderr}`
-        );
-      }
+      }, false);
 
       store.gitRemoteAdded = true;
 
-      return {
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      };
+      return output;
     }
 
     return {};
@@ -234,26 +222,19 @@ const getPullCurrentMasterTask = ()=> ({
   description: 'pull current master',
   task: async (store)=> {
     if (!store.gitUpToDate) {
-      const output = await execute({
-        cmd: `git pull origin master`,
-        info: 'Git pull master'
-      });
+      await execute({
+        cmd: `git fetch --all`,
+        info: 'Git fetch from remote'
+      }, false);
 
-      const {
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      } = output;
+      const output = await execute({
+        cmd: `git reset --hard origin/master`,
+        info: 'Git reset master to remote'
+      }, false);
 
       store.gitUpToDate = true;
 
-      return {
-        printInfo: info,
-        printWarning: warning,
-        printError: error,
-        printSuccess: success
-      };
+      return output;
     }
 
     return {};
@@ -275,51 +256,35 @@ const runGitInitialisationTasks = async (store)=> {
   await store.runTasks();
 };
 
+// eslint-disable-next-line max-statements
+const setStoreNoGit = (store)=> {
+  store.gitInitialised = false;
+  store.gitUpToDate = false;
+  store.gitRemoteAdded = false;
+  store.gitUrl = null;
+  store.gitSSHUrl = null;
+  store.gitHtmlUrl = null;
+
+  store.answers.useCommitizen = false;
+  store.answers.repoOwner = null;
+  store.answers.repoOrg = null;
+  store.answers.initialBranches = [];
+  store.answers.gitAccessToken = null;
+};
+
 // eslint-disable-next-line max-statements, complexity
 export const checkRestore = async (store, config)=> {
-  const useGit = {question: 'Would you like to use github:', field: 'useGit'};
-  const answers = [
-    {question: 'Would you like to use commitizen: ', field: 'useCommitizen'},
-    {question: 'Who owns the project (username): ', field: 'repoOwner'},
-    {question: 'Project org name: ', field: 'repoOrg'},
-    {
-      question: 'Branches to initialise (comma seperated): ',
-      field: 'initialBranches'
-    },
-    {
-      question: 'Enter your GitHub personal access token: ',
-      field: 'gitAccessToken'
-    }
-  ];
-  const data = [
-    'gitInitialised', 'gitUpToDate', 'gitRemoteAdded',
-    'gitUrl', 'gitSSHUrl', 'gitHtmlUrl'
-  ];
+  // TODO requiredConditionals?
+  const useGit = {question: 'Would you like to use github: ', field: 'useGit'};
+
   let restoreSuccess = true;
 
   if (
     expectDefined(store.answers[useGit.field])
-    && store.answers[useGit.field] === true
   ) {
-    for (const answer of answers) {
-      if (!expectDefined(store.answers[answer.field])) {
-        printWarning(
-          // eslint-disable-next-line
-          `Source plugin required ${answer.field} to be defined - reinitialising...`
-        );
-
-        restoreSuccess = false;
-      }
-    }
-    for (const field of data) {
-      if (!expectDefined(store[field])) {
-        printWarning(
-          `Source plugin required ${field} to be defined - reinitialising...`
-        );
-        
-        restoreSuccess = false;
-      }
-    }
+    restoreSuccess = checkFields(
+      store, 'Source', requiredAnswers, requiredFields
+    );
   } else {
     restoreSuccess = false;
   }
@@ -327,17 +292,20 @@ export const checkRestore = async (store, config)=> {
   if (restoreSuccess) {
     printDim('\n-------- SOURCE DETAILS ---------\n', 'blue');
     printDim(`${useGit.question} ${store.answers[useGit.field]}`, 'white');
-    for (const answer of answers) {
+    for (const answer of requiredAnswers) {
       printDim(`${answer.question} ${store.answers[answer.field]}`, 'white');
     }
   } else {
     // eslint-disable-next-line
-    await init(store, config);
+    await init(store, config, false);
   }
 };
 
-export const init = async (store, config)=> {
-  if (store.completedSteps.some((step)=> step === 'init:source')) {
+export const init = async (store, config, restore=true)=> {
+  if (
+    restore
+    && store.completedSteps.some((step)=> step === 'init:source')
+  ) {
     await checkRestore(store, config);
   } else {
     await getShouldUseGit(store);
@@ -347,6 +315,8 @@ export const init = async (store, config)=> {
       await getGitAccessToken(store, config);
 
       await runGitInitialisationTasks(store);
+    } else {
+      setStoreNoGit(store);
     }
 
     store.emit(STEP_COMPLETE, 'init:source');

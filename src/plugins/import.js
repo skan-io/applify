@@ -21,7 +21,7 @@ export const importPlugin = async (store, config, role)=> {
           PLUGINS_OUT_OF_SYNC.code,
           singleLine`${PLUGINS_OUT_OF_SYNC.message}:
              ${' '}failed with '${role}: ${plugin}' (HINT: It seems your plugin config
-             ${' '}has changed since you last ran applify and this will break plugin
+             ${' '}has changed since you last ran applify init and this will break plugin
              ${' '}dependencies - try running with --reset option)`
         );
       }
@@ -33,7 +33,9 @@ export const importPlugin = async (store, config, role)=> {
 
     try {
       const importedPkg = await import(`./${pkg}`);
-      store.importedPlugins.push({role, plugin});
+      if (!store.importedPlugins.some((pluginObj)=> pluginObj.role === role)) {
+        store.importedPlugins.push({role, plugin});
+      }
       store[role] = importedPkg;
       return importedPkg;
     } catch (err) {
@@ -60,7 +62,7 @@ export const importPlugin = async (store, config, role)=> {
       importedPkg = await import(plugin);
     }
 
-    store.importedPlugins.push(plugin);
+    store.importedPlugins.push({role, plugin});
     store[role] = importedPkg;
     return importedPkg;
   }

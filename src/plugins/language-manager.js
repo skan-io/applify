@@ -1,6 +1,27 @@
 import {STEP_COMPLETE} from '../events';
-import {printInfo, printWarning} from '../print';
-import {expectDefined} from './utils';
+import {printInfo, printDim} from '../print';
+import {checkFields, parseBabelPlugins} from './utils';
+
+
+export const requiredFields = [
+  'babelInstalled',
+  'reactInstalled',
+  'reduxInstalled',
+  'routerInstalled',
+  'eslintInstalled'
+];
+
+export const requiredAnswers = [
+  {question: 'Node target: ', field: 'nodeTarget'},
+  {question: 'Browser targets (comma seperated): ', field: 'browserTargets'},
+  {
+    question: 'Would you like to add extra babel plugins: ',
+    field: 'babelPlugins'
+  },
+  {question: 'Would you like to use redux: ', field: 'useRedux'},
+  {question: 'Would you like to use router: ', field: 'useRouter'},
+  {question: 'Would you like to use eslint: ', field: 'useEslint'}
+];
 
 
 const getBabelDetails = async (store)=> {
@@ -21,7 +42,7 @@ const getBabelDetails = async (store)=> {
       store.answers.browserTargets || ['last 2 versions', 'not IE < 11']
     )
   );
-  
+
   store.addQuestion(
     store.prompter.createQuestion(
       'Would you like to add extra babel plugins: ',
@@ -35,17 +56,58 @@ const getBabelDetails = async (store)=> {
   await store.runQuestions();
 };
 
-const runBabelInstallTasks = async (store)=> {
-  store.addTask({
+const getReduxDetails = async (store)=> {
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Would you like to use redux: ',
+      'confirm',
+      'useRedux',
+      store.answers.useRedux || true
+    )
+  );
+
+  await store.runQuestions();
+};
+
+const getRouterDetails = async (store)=> {
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Would you like to use router: ',
+      'confirm',
+      'useRouter',
+      store.answers.useRouter || false
+    )
+  );
+
+  await store.runQuestions();
+};
+
+const getLinterDetails = async (store)=> {
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Would you like to use eslint: ',
+      'confirm',
+      'useEslint',
+      store.answers.useEslint || true
+    )
+  );
+
+  await store.runQuestions();
+};
+
+// eslint-disable-next-line max-statements
+const runLanguageInstallTasks = async (store)=> {
+  const task = {
     type: 'batch',
-    description: 'Install babel dependencies',
+    description: 'Install babel, react and redux dependencies',
     children: [
       {
         type: 'task',
-        description: 'install skan-io babel config',
+        description: 'install skan-io babel react config',
         task: async (storeCtx)=> {
           if (!storeCtx.babelInstalled) {
             const output = await storeCtx.packageInstaller.install(
+              // TODO @skan-io/babel-config-react
               '@skan-io/babel-config-nodejs'
             );
 
@@ -58,40 +120,151 @@ const runBabelInstallTasks = async (store)=> {
         }
       }
     ]
+  };
+
+  if (store.answers.babelPlugins !== 'none') {
+    const plugins = parseBabelPlugins(store.answers.babelPlugins);
+
+    if (plugins.array.length) {
+      task.children.push({
+        type: 'task',
+        description: 'install extra babel plugins',
+        task: async (storeCtx)=> {
+          const output = await storeCtx.packageInstaller.install(
+            plugins.string
+          );
+
+          return output;
+        }
+      });
+    }
+  }
+
+  task.children.push({
+    type: 'task',
+    description: 'install react dependencies',
+    task: async (storeCtx)=> {
+      if (!storeCtx.reactInstalled) {
+        const output = await storeCtx.packageInstaller.install(
+          'react react-dom react-device'
+        );
+
+        storeCtx.reactInstalled = true;
+
+        return output;
+      }
+
+      return {};
+    }
   });
+
+  if (store.answers.useRedux) {
+    task.children.push({
+      type: 'task',
+      description: 'install redux dependencies',
+      task: async (storeCtx)=> {
+        if (!storeCtx.reduxInstalled) {
+          const output = await storeCtx.packageInstaller.install(
+            'react-redux redux redux-responsive redux-thunk'
+          );
+
+          storeCtx.reduxInstalled = true;
+
+          return output;
+        }
+
+        return {};
+      }
+    });
+  }
+
+  if (store.answers.useRouter) {
+    task.children.push({
+      type: 'task',
+      description: 'install router dependencies',
+      task: async (storeCtx)=> {
+        if (!storeCtx.routerInstalled) {
+          const output = await storeCtx.packageInstaller.install(
+            // eslint-disable-next-line
+            `react-router ${storeCtx.answers.useRedux ? 'connected-react-router' : ''}`
+          );
+
+          storeCtx.routerInstalled = true;
+
+          return output;
+        }
+
+        return {};
+      }
+    });
+  }
+
+  if (store.answers.useEslint) {
+    task.children.push({
+      type: 'task',
+      description: 'install skan-io eslint react config',
+      task: async (storeCtx)=> {
+        if (!storeCtx.eslintInstalled) {
+          const output = await storeCtx.packageInstaller.install(
+            '@skan-io/eslint-config-react'
+          );
+
+          storeCtx.eslintInstalled = true;
+
+          return output;
+        }
+
+        return {};
+      }
+    });
+  }
+
+  store.addTask(task);
 
   await store.runTasks();
 };
 
 
 export const checkRestore = async (store)=> {
-  const data = ['babelInstalled'];
-  let restoreSuccess = true;
+  const restoreSuccess = checkFields(
+    store, 'Language', requiredAnswers, requiredFields
+  );
 
-  for (const field of data) {
-    if (!expectDefined(store[field])) {
-      printWarning(
-        `Package plugin required ${field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
+  if (restoreSuccess) {
+    printDim('\n-------- LANGUAGE DETAILS ---------\n', 'blue');
+    for (const answer of requiredAnswers) {
+      printDim(`${answer.question} ${store.answers[answer.field]}`, 'white');
     }
-  }
-
-  if (!restoreSuccess) {
+  } else {
     // eslint-disable-next-line
-    await init(store);
+    await init(store, undefined, false);
   }
 };
 
-
-export const init = async (store)=> {
-  if (store.completedSteps.some((step)=> step === 'init:language')) {
+// eslint-disable-next-line max-statements
+export const init = async (store, config, restore=true)=> {
+  if (
+    restore
+    && store.completedSteps.some((step)=> step === 'init:language')
+  ) {
     await checkRestore(store);
   } else {
 
     await getBabelDetails(store);
-    await runBabelInstallTasks(store);
+    await getReduxDetails(store);
+    await getRouterDetails(store);
+    await getLinterDetails(store);
+    await runLanguageInstallTasks(store);
+
+    if (!store.answers.useRedux) {
+      store.reduxInstalled = false;
+    }
+    if (!store.answers.useRouter) {
+      store.routerInstalled = false;
+    }
+    if (!store.answers.useEslint) {
+      store.eslintInstalled = false;
+    }
 
     store.emit(STEP_COMPLETE, 'init:language');
     store.completedSteps.push('init:language');

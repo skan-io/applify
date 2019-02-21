@@ -8,12 +8,31 @@ import {
 } from '../error/error-codes';
 import {printInfo, printWarning, printDim} from '../print';
 import {STEP_COMPLETE} from '../events';
-import {expectDefined} from './utils';
+import {checkFields} from './utils';
 
 
 const NPM_VERSION_MIN = '6';
 const YARN_VERSION_MIN = '1';
 const NODE_VERSION_MIN = 'v10';
+
+
+export const requiredAnswers = [
+  {question: 'Use npm or yarn: ', field: 'packageManager'},
+  {question: 'What is the project name: ', field: 'projectName'},
+  {question: 'What is the project scope: ', field: 'orgScope'},
+  {
+    question: 'What is the project description: ',
+    field: 'projectDescription'
+  },
+  {question: 'What is the project license: ', field: 'projectLicense'},
+  {question: 'Who is the project author: ', field: 'projectAuthor'},
+  {question: 'Is this a private project: ', field: 'privatePackage'}
+];
+
+export const requiredFields = [
+  'nodeVersionConfirmed',
+  'packageManagerVersionConfirmed'
+];
 
 
 const getEnvironmentDetails = async (store)=> {
@@ -213,56 +232,28 @@ const getProjectDetails = async (store)=> {
 
 // eslint-disable-next-line max-statements
 export const checkRestore = async (store)=> {
-  const answers = [
-    {question: 'Use npm or yarn: ', field: 'packageManager'},
-    {question: 'What is the project name: ', field: 'projectName'},
-    {question: 'What is the project scope: ', field: 'orgScope'},
-    {
-      question: 'What is the project description: ',
-      field: 'projectDescription'
-    },
-    {question: 'What is the project license: ', field: 'projectLicense'},
-    {question: 'Who is the project author: ', field: 'projectAuthor'},
-    {question: 'Is this a private project: ', field: 'privatePackage'}
-  ];
-  const data = ['nodeVersionConfirmed', 'packageManagerVersionConfirmed'];
-  let restoreSuccess = true;
-
-  for (const answer of answers) {
-    if (!expectDefined(store.answers[answer.field])) {
-      printWarning(
-        // eslint-disable-next-line
-        `Project plugin required ${answer.field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
-    }
-  }
-  for (const field of data) {
-    if (!expectDefined(store[field])) {
-      printWarning(
-        `Project plugin required ${field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
-    }
-  }
+  const restoreSuccess = checkFields(
+    store, 'Project', requiredAnswers, requiredFields
+  );
 
   if (restoreSuccess) {
     printDim('\n-------- PROJECT DETAILS ---------\n', 'blue');
-    for (const answer of answers) {
+    for (const answer of requiredAnswers) {
       printDim(`${answer.question} ${store.answers[answer.field]}`, 'white');
     }
   } else {
     // eslint-disable-next-line
-    await init(store);
+    await init(store, undefined, false);
   }
 };
 
 // Initialise the project details, check for package manager,
 // check node version
-export const init = async (store)=> {
-  if (store.completedSteps.some((step)=> step === 'init:project')) {
+export const init = async (store, config, restore=true)=> {
+  if (
+    restore
+    && store.completedSteps.some((step)=> step === 'init:project')
+  ) {
     await checkRestore(store);
   } else {
     await getEnvironmentDetails(store);

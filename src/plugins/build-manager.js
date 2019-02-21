@@ -1,6 +1,16 @@
 import {STEP_COMPLETE} from '../events';
-import {printInfo, printWarning, printDim} from '../print';
-import {expectDefined} from './utils';
+import {printInfo, printDim} from '../print';
+import {checkFields} from './utils';
+
+
+export const requiredAnswers = [
+  {question: 'Entry points (module names): ', field: 'buildEntries'},
+  {question: 'Output directory: ', field: 'buildOutputPath'},
+  {question: 'Development server port: ', field: 'devServerPort'},
+  {question: 'Favicon url: ', field: 'faviconUrl'}
+];
+
+export const requiredFields = ['webpackInstalled'];
 
 
 const getBuildDetails = async (store)=> {
@@ -30,7 +40,7 @@ const getBuildDetails = async (store)=> {
       store.answers.devServerPort || '8080'
     )
   );
-  
+
   store.addQuestion(
     store.prompter.createQuestion(
       'Favicon url: ',
@@ -58,7 +68,11 @@ const runWebpackSetupTasks = async (store)=> {
               '@skan-io/webpack-config-base'
             );
 
-            storeCtx.webpackInstalled = true;
+            if (output.result.stderr) {
+              storeCtx.webpackInstalled = false;
+            } else {
+              storeCtx.webpackInstalled = true;
+            }
 
             return output;
           }
@@ -74,38 +88,13 @@ const runWebpackSetupTasks = async (store)=> {
 
 // eslint-disable-next-line max-statements
 export const checkRestore = async (store)=> {
-  const answers = [
-    {question: 'Entry points (module names): ', field: 'buildEntries'},
-    {question: 'Output directory: ', field: 'buildOutputPath'},
-    {question: 'Development server port: ', field: 'devServerPort'},
-    {question: 'Favicon url: ', field: 'faviconUrl'}
-  ];
-  const data = ['webpackInstalled'];
-  let restoreSuccess = true;
-
-  for (const answer of answers) {
-    if (!expectDefined(store.answers[answer.field])) {
-      printWarning(
-        // eslint-disable-next-line
-        `Build plugin required ${answer.field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
-    }
-  }
-  for (const field of data) {
-    if (!expectDefined(store[field])) {
-      printWarning(
-        `Build plugin required ${field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
-    }
-  }
+  const restoreSuccess = checkFields(
+    store, 'Build', requiredAnswers, requiredFields
+  );
 
   if (restoreSuccess) {
     printDim('\n-------- BUILD DETAILS ---------\n', 'blue');
-    for (const answer of answers) {
+    for (const answer of requiredAnswers) {
       printDim(`${answer.question} ${store.answers[answer.field]}`, 'white');
     }
   } else {

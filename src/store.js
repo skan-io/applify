@@ -63,7 +63,7 @@ class Store extends EventEmitter {
 
     fs.writeFileSync(
       applifyTempFile,
-      stringify(this)
+      stringify({...this, preloaded: false})
     );
   }
 }

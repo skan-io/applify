@@ -1,9 +1,13 @@
 import fs from 'fs';
 import {execute} from '../execute';
 import {STEP_COMPLETE} from '../events';
-import {printWarning} from '../print';
-import {expectDefined, getScopedProject} from './utils';
+import {getScopedProject} from './utils';
 import {stringify} from '../utils/strings';
+
+
+export const requiredFields = ['packageInstallerAttached', 'packageJsonExists'];
+
+export const requiredAnswers = [];
 
 
 const attachPackageInstaller = (store)=> {
@@ -51,7 +55,7 @@ const writeInitialPackageJson = (store)=> {
     url: `git+${store.gitHtmlUrl}`
   } : undefined;
   json.author = store.answers.projectAuthor;
-  json.license = store.answers.license;
+  json.license = store.answers.projectLicense;
   json.homepage = store.answers.useGit
     ? `${store.gitHtmlUrl}#readme`
     : undefined;
@@ -112,35 +116,15 @@ const runPackageInitialisationTasks = async (store)=> {
 };
 
 export const checkRestore = async (store)=> {
-  const data = ['packageInstallerAttached', 'packageJsonExists'];
-  let restoreSuccess = true;
-
-  for (const field of data) {
-    if (!expectDefined(store[field])) {
-      printWarning(
-        `Package plugin required ${field} to be defined - reinitialising...`
-      );
-
-      restoreSuccess = false;
-    }
-  }
-
-  if (!restoreSuccess) {
-    // eslint-disable-next-line
-    await init(store);
-  }
+  // eslint-disable-next-line
+  await init(store);
 };
 
 export const init = async (store)=> {
-  if (store.completedSteps.some((step)=> step === 'init:package')) {
-    await checkRestore(store);
-  } else {
+  await runPackageInitialisationTasks(store);
 
-    await runPackageInitialisationTasks(store);
-
-    store.emit(STEP_COMPLETE, 'init:package');
-    store.completedSteps.push('init:pacakge');
-  }
+  store.emit(STEP_COMPLETE, 'init:package');
+  store.completedSteps.push('init:package');
 };
 
 // TODO run - create the scripts directory, install basic tools (rimraf, npx-run)

@@ -10,13 +10,13 @@ const config = ()=> ({
     'language',
     'build',
     'test',
-    // 'lint',
+    // 'style',
     // 'deploy',
     // 'module',
     // 'docs'
   ],
 
-  branches: ['master', 'project-init'],
+  branches: ['master', 'dev'],
   gitAccessToken,
 
   // Operators
@@ -30,7 +30,8 @@ const config = ()=> ({
   package: '@skan-io/applify/package-manager',
   language: '@skan-io/applify/language-manager',
   build: '@skan-io/applify/build-manager',
-  test: '@skan-io/applify/test-manager'
+  test: '@skan-io/applify/test-manager',
+  style: '@skan-io/applify/style-manager'
 });
 
 export default config;
