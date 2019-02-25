@@ -6,9 +6,10 @@ import {
   STORE_INIT,
   STORE_OPERATOR_SETUP,
   STORE_MANAGER_SETUP,
-  STORE_PRELOADED
+  STORE_PRELOADED,
+  STORE_RUN
 } from './events';
-import {newLine} from './print';
+import {newLine, printInfo} from './print';
 import {resetTempFiles} from './reset';
 
 
@@ -145,7 +146,7 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
 
   // If we still need to initialise the store
   if (steps[0] === 'init') {
-    await initialiseStorePlugins(store, config);
+    await initialiseStorePlugins(store, config, false);
     // Get the left over steps
     steps = steps.slice(1);
     store.updateTempStore();
@@ -160,6 +161,23 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
       }
     }
   }
+
+  printInfo('\n-------- RUN SETUP DETAILS ---------\n');
+
+  await store['project'].run(store);
+  await store['source'].run(store);
+
+  store.emit(STORE_RUN);
+
+  // Run each step
+  // for (const step of steps) {
+  //   // If the run phase was not complete run it again
+  //   if (!store.completeSteps.some(
+  //     (completed)=> completed === `run:${step}`)
+  //   ) {
+  //     await store[step].run(store, config);
+  //   }
+  // }
 
   // Run the initialisation tasks and run the initialisation question
   await store.runTasks();

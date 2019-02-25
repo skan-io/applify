@@ -85,28 +85,43 @@ export const execute = async ({cmd, info}, throwOnError=true)=> {
  *                           ] IO to be used by the child process
  * @return {Promise}  Resolved when child process exits
  */
+// eslint-disable-next-line max-statements
 export const spawn = async (
-  {cmd, args, info}, stdio=[process.stdin, process.stdout, process.stderr]
+  {cmd, args, info}, throwOnError=true,
+  stdio=[process.stdin, process.stdout, process.stderr]
 )=> {
   // TODO make conform to task printing
   if (global.log) {
     printInfo(info);
   }
 
-  const childProcess = shellSpawn(cmd, args, {stdio});
+  try {
+    const childProcess = shellSpawn(cmd, args, {stdio});
 
-  if (childProcess.stdout && global.log) {
-    childProcess.stdout.on('data', (data)=> {
-      printSuccess(data);
-    });
+    if (childProcess.stdout && global.log) {
+      childProcess.stdout.on('data', (data)=> {
+        printSuccess(data);
+      });
+    }
+
+    if (childProcess.stderr && global.log) {
+      childProcess.stdout.on('data', (data)=> {
+        printError(data);
+      });
+    }
+
+    // TODO improve to watch for failed exits
+    await onExit(childProcess);
+  } catch (err) {
+    if (throwOnError) {
+      throw applifyError(
+        EXECUTION_ERROR.code,
+        `${EXECUTION_ERROR.message}: ${info} failed with command ${cmd}`
+      );
+    }
+
+    return {
+      printError: err
+    };
   }
-
-  if (childProcess.stderr && global.log) {
-    childProcess.stdout.on('data', (data)=> {
-      printError(data);
-    });
-  }
-
-  // TODO improve to watch for failed exits
-  await onExit(childProcess);
 };

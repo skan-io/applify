@@ -41,6 +41,7 @@
     "@skan-io/release-config": "^1.0.0",
     "@skan-io/remark-config": "^1.0.1",
     "cz-conventional-changelog": "2.1.0",
+    "isurl": "4.0.0",
     "npx-run": "^2.1.2",
     "rimraf": "^2.6.3"
   },

@@ -5,24 +5,41 @@ import {getScopedProject} from './utils';
 import {stringify} from '../utils/strings';
 
 
-export const requiredFields = ['packageInstallerAttached', 'packageJsonExists'];
+export const requiredFields = [
+  'packageInstallerAttached', 'packageJsonExists', 'npxRunInstalled'
+];
 
 export const requiredAnswers = [];
 
+const getDepFlag = (manager, type)=> {
+  if (type === 'dev') {
+    return ' -D ';
+  }
+  if (type === 'global' && manager === 'npm') {
+    return ' -g ';
+  }
+
+  return ' ';
+};
 
 const attachPackageInstaller = (store)=> {
   store.packageInstaller = {
-    install: async (pkg, devDep=true)=> {
+    install: async (pkg, type='dev')=> {
+      const depFlag = getDepFlag(
+        store.answers.packageManager, type
+      );
+
       const cmd = (
         store.answers.packageManager === 'npm'
         || store.answers.packageManager === undefined
       )
-        ? `npm i ${devDep ? '-D' : ''} ${pkg}`
-        : `yarn add ${devDep ? '-D' : ''} ${pkg}`;
+        ? `npm i${depFlag}${pkg}`
+        : `yarn${type === 'global' ? ' global ' : ' '}add${depFlag}${pkg}`;
 
       return await execute({
         cmd,
-        info: `Install ${devDep ? 'dev' : ''} dependency ${pkg}`
+        // eslint-disable-next-line
+        info: `Install${type === 'peer' ? ' ' : ` ${type} `}dependency ${pkg}`
       });
     },
     remove: async (pkg)=> {
@@ -74,9 +91,11 @@ const writeInitialPackageJson = (store)=> {
 };
 
 const runPackageInitialisationTasks = async (store)=> {
-  store.addTask({
+  const task = {
     type: 'batch',
-    description: 'Initialise package.json and packageInstaller',
+    description: store.preloaded
+      ? 'Reinitialise packageInstaller'
+      : 'Initialise packageInstaller and package.json',
     children: [
       {
         type: 'task',
@@ -90,27 +109,50 @@ const runPackageInitialisationTasks = async (store)=> {
             printInfo: 'Attached package installer to store'
           };
         }
-      },
-      {
-        type: 'task',
-        description: 'write initial package.json',
-        task: (storeCtx)=> {
-          if (!store.packageJsonExists) {
-            const stringifiedJson = writeInitialPackageJson(storeCtx);
-
-            storeCtx.packageJsonExists = true;
-
-            return {
-              printInfo: 'Wrote intial package.json',
-              printSuccess: stringifiedJson
-            };
-          }
-
-          return {};
-        }
       }
     ]
-  });
+  };
+
+  if (!store.preloaded) {
+    task.children.push({
+      type: 'task',
+      description: 'write initial package.json',
+      task: (storeCtx)=> {
+        if (!storeCtx.packageJsonExists) {
+          const stringifiedJson = writeInitialPackageJson(storeCtx);
+
+          storeCtx.packageJsonExists = true;
+
+          return {
+            printInfo: 'Wrote intial package.json',
+            printSuccess: stringifiedJson
+          };
+        }
+
+        return {};
+      }
+    });
+
+    if (store.answers.packageManager === 'npm') {
+      task.children.push({
+        type: 'task',
+        description: 'install npx-run',
+        task: async (storeCtx)=> {
+          if (!storeCtx.npxRunInstalled) {
+            const output = await storeCtx.packageInstaller.install(
+              'npx-run'
+            );
+
+            store.npxRunInstalled = true;
+
+            return output;
+          }
+        }
+      });
+    }
+  }
+
+  store.addTask(task);
 
   await store.runTasks();
 };
@@ -122,6 +164,10 @@ export const checkRestore = async (store)=> {
 
 export const init = async (store)=> {
   await runPackageInitialisationTasks(store);
+
+  if (!store.packageManager === 'npm') {
+    store.npxRunInstalled = false;
+  }
 
   store.emit(STEP_COMPLETE, 'init:package');
   store.completedSteps.push('init:package');

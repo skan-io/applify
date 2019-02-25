@@ -46,7 +46,7 @@ const getBuildDetails = async (store)=> {
       'Favicon url: ',
       'input',
       'faviconUrl',
-      store.answers.faviconUrl || ['favicon.png']
+      store.answers.faviconUrl || 'favicon.png'
     )
   );
 

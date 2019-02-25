@@ -10,7 +10,7 @@ const config = ()=> ({
     'language',
     'build',
     'test',
-    // 'style',
+    'style',
     // 'deploy',
     // 'module',
     // 'docs'

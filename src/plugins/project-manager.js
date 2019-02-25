@@ -9,6 +9,7 @@ import {
 import {printInfo, printWarning, printDim} from '../print';
 import {STEP_COMPLETE} from '../events';
 import {checkFields} from './utils';
+import {createReadme} from './create-readme';
 
 
 const NPM_VERSION_MIN = '6';
@@ -190,9 +191,10 @@ const getProjectDetails = async (store)=> {
   store.addQuestion(
     store.prompter.createQuestion(
       'What is the project license: ',
-      'input',
+      'list',
       'projectLicense',
-      store.answers.projectLicense || 'MIT'
+      store.answers.projectLicense || 'MIT',
+      ['MIT', 'Apache-2.0', 'GPL-3.0', 'BSD-2-clause', 'BSD-3-clause', 'CC', 'WTFPL', 'UNLICENSE']
     )
   );
 
@@ -264,3 +266,12 @@ export const init = async (store, config, restore=true)=> {
     store.completedSteps.push('init:project');
   }
 };
+
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:project')) {
+    await createReadme(store);
+  }
+
+  store.emit(STEP_COMPLETE, 'run:project');
+  store.completedSteps.push('run:project');
+}

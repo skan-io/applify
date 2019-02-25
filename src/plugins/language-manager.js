@@ -219,6 +219,18 @@ const runLanguageInstallTasks = async (store)=> {
     });
   }
 
+  task.children.push({
+    type: 'task',
+    description: 'install skan-io markdown lint config',
+    task: async (storeCtx)=> {
+      const output = await storeCtx.packageInstaller.install(
+        '@skan-io/remark-config'
+      );
+
+      return output;
+    }
+  });
+
   store.addTask(task);
 
   await store.runTasks();
