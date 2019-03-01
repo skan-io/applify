@@ -1,6 +1,9 @@
+import fs from 'fs';
+import {join} from 'path';
 import {STEP_COMPLETE} from '../events';
 import {printInfo, printDim} from '../print';
 import {checkFields} from './utils';
+import {createWebpackConfig} from './create-webpack-config';
 
 
 export const requiredAnswers = [
@@ -16,10 +19,10 @@ export const requiredFields = ['webpackInstalled'];
 const getBuildDetails = async (store)=> {
   store.addQuestion(
     store.prompter.createQuestion(
-      'Entry points (module names): ',
+      'Entry points (comma separated): ',
       'input',
       'buildEntries',
-      store.answers.buildEntries || ['index.html.js']
+      store.answers.buildEntries || 'index.html.js'
     )
   );
 
@@ -28,7 +31,7 @@ const getBuildDetails = async (store)=> {
       'Output directory: ',
       'input',
       'buildOutputPath',
-      store.answers.buildOutputPath || ['build/pkg']
+      store.answers.buildOutputPath || 'build/pkg'
     )
   );
 
@@ -86,6 +89,34 @@ const runWebpackSetupTasks = async (store)=> {
   await store.runTasks();
 };
 
+const createWriteWebpackConfigTask = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Write weback config',
+    children: [
+      {
+        type: 'task',
+        description: 'write webpack.config.babel.js file',
+        task: (storeCtx)=> {
+          const webpackPath = join(
+            storeCtx.workingDir, 'webpack.config.babel.js'
+          );
+          const webpackConfig = createWebpackConfig(store);
+
+          fs.writeFileSync(webpackPath, webpackConfig);
+
+          return {
+            printInfo: `Wrote ${webpackPath}`,
+            printSuccess: webpackConfig
+          };
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
 // eslint-disable-next-line max-statements
 export const checkRestore = async (store)=> {
   const restoreSuccess = checkFields(
@@ -114,4 +145,15 @@ export const init = async (store)=> {
     store.emit(STEP_COMPLETE, 'init:build');
     store.completedSteps.push('init:build');
   }
+};
+
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:build')) {
+    await createWriteWebpackConfigTask(store);
+  }
+
+  store.emit(STEP_COMPLETE, 'run:build');
+  store.completedSteps.push('run:build');
+
+  return ()=> Promise.resolve(null);
 };

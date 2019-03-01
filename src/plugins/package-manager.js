@@ -1,8 +1,10 @@
 import fs from 'fs';
+import {join} from 'path';
 import {execute} from '../execute';
 import {STEP_COMPLETE} from '../events';
-import {getScopedProject} from './utils';
+import {getScopedProject, addResourceFromTemplate} from './utils';
 import {stringify} from '../utils/strings';
+import {createConfigScript, createRunScript} from './create-scripts';
 
 
 export const requiredFields = [
@@ -38,7 +40,6 @@ const attachPackageInstaller = (store)=> {
 
       return await execute({
         cmd,
-        // eslint-disable-next-line
         info: `Install${type === 'peer' ? ' ' : ` ${type} `}dependency ${pkg}`
       });
     },
@@ -94,8 +95,8 @@ const runPackageInitialisationTasks = async (store)=> {
   const task = {
     type: 'batch',
     description: store.preloaded
-      ? 'Reinitialise packageInstaller'
-      : 'Initialise packageInstaller and package.json',
+      ? 'Reinitialise package installer'
+      : 'Initialise package installer and package.json',
     children: [
       {
         type: 'task',
@@ -157,6 +158,104 @@ const runPackageInitialisationTasks = async (store)=> {
   await store.runTasks();
 };
 
+const installSupportTools = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Install package support tools',
+    children: [
+      {
+        type: 'task',
+        description: 'install rimraf, read-package-json and yargs',
+        task: async (storeCtx)=> {
+          const output = await storeCtx.packageInstaller.install(
+            'rimraf read-package-json yargs'
+          );
+
+          return output;
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
+const createScriptsDirectory = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Create package run scripts',
+    children: [
+      {
+        type: 'task',
+        description: `create ${store.runScriptsDir} directory`,
+        task: (storeCtx)=> {
+          const {runScriptsDir} = storeCtx;
+          let printSuccess = `Found ${runScriptsDir}`;
+
+          if (!fs.existsSync(runScriptsDir)) {
+            fs.mkdirSync(runScriptsDir);
+            printSuccess = `Created ${runScriptsDir}`;
+          }
+
+          return {
+            printInfo: `Find or create local scripts directory`,
+            printSuccess
+          };
+        }
+      },
+      {
+        type: 'task',
+        description: 'copy run script lib templates',
+        task: (storeCtx)=> {
+          let printInfo = 'Copied scripts/lib/utils.js scripts/lib/walk.js';
+          addResourceFromTemplate('scripts/lib/utils.js');
+          addResourceFromTemplate('scripts/lib/walk.js');
+
+          if (storeCtx.answers.useStorybook) {
+            addResourceFromTemplate('scripts/lib/find-files.js');
+            printInfo += ' scrips/lib/find-files.js';
+          }
+
+          return {
+            printInfo
+          };
+        }
+      },
+      {
+        type: 'task',
+        description: 'write config script',
+        task: (storeCtx)=> {
+          const configScript = createConfigScript(storeCtx);
+          const configScriptPath = join(storeCtx.runScriptsDir, 'config.js');
+          fs.writeFileSync(configScriptPath, configScript);
+
+          return {
+            printInfo: `Wrote ${configScriptPath}`,
+            printSuccess: configScript
+          };
+        }
+      },
+      {
+        type: 'task',
+        description: 'write run script',
+        task: (storeCtx)=> {
+          const runScriptPath = join(storeCtx.runScriptsDir, 'index.js');
+          const runScript = createRunScript(storeCtx);
+
+          fs.writeFileSync(runScriptPath, runScript);
+
+          return {
+            printInfo: `Wrote ${runScriptPath}`,
+            printSuccess: runScript
+          };
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
 export const checkRestore = async (store)=> {
   // eslint-disable-next-line
   await init(store);
@@ -173,4 +272,14 @@ export const init = async (store)=> {
   store.completedSteps.push('init:package');
 };
 
-// TODO run - create the scripts directory, install basic tools (rimraf, npx-run)
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:package')) {
+    await installSupportTools(store);
+    await createScriptsDirectory(store);
+  }
+
+  store.emit(STEP_COMPLETE, 'run:package');
+  store.completedSteps.push('run:package');
+
+  return ()=> Promise.resolve(null);
+};

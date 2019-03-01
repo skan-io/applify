@@ -1,4 +1,8 @@
+import fs from 'fs';
+import {join, dirname} from 'path';
 import {printWarning} from '../print';
+import {applifyError} from '../error';
+import {TEMPLATE_COPY_ERROR} from '../error/error-codes';
 
 
 export const expectDefined = (path)=> {
@@ -43,12 +47,14 @@ export const checkFields = (store, pluginName, answers, fields)=> {
   return restoreSuccess;
 }
 
-export const parseBabelPlugins = (plugins)=> {
+export const parseArrayString = (array)=> {
   let string = '';
-  if (plugins !== 'none' && plugins !== '') {
-    const parts = plugins.split(',');
-    for (const part of parts) {
-      string += ` ${part}`;
+  if (array !== 'none' && array !== '') {
+    const parts = array.split(',');
+    for (let i = 0; i < parts.length; i += 1) {
+      const part = parts[i];
+      parts[i] = part.trim();
+      string += ` ${part.trim()}`;
     }
 
     return {
@@ -61,4 +67,29 @@ export const parseBabelPlugins = (plugins)=> {
     array: [],
     string: ''
   };
+}
+
+// eslint-disable-next-line
+export const addResourceFromTemplate = (
+    filename,
+    srcFile=join(dirname(process.argv[1]), 'templates', filename),
+    destFile=join(process.cwd(), filename),
+    throwOnError=true
+)=> {
+  try {
+    if (!fs.existsSync(dirname(destFile))) {
+      fs.mkdirSync(dirname(destFile));
+    }
+
+    fs.copyFileSync(srcFile, destFile);
+    fs.chmodSync(destFile, '755');
+
+  } catch (err) {
+    if (throwOnError) {
+      throw applifyError(
+        TEMPLATE_COPY_ERROR.code,
+        `${TEMPLATE_COPY_ERROR.message}: failed to copy ${srcFile} to ${destFile} with ${err}`
+      );
+    }
+  }
 }

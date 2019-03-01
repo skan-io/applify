@@ -1,6 +1,10 @@
+import fs from 'fs';
+import {join} from 'path';
 import {STEP_COMPLETE} from '../events';
 import {printInfo, printDim} from '../print';
-import {checkFields, parseBabelPlugins} from './utils';
+import {checkFields, parseArrayString} from './utils';
+import {createBabelConfig} from './create-babel-config';
+import {createEslintConfig} from './create-eslint-config';
 
 
 export const requiredFields = [
@@ -39,7 +43,7 @@ const getBabelDetails = async (store)=> {
       'Browser targets (comma seperated): ',
       'input',
       'browserTargets',
-      store.answers.browserTargets || ['last 2 versions', 'not IE < 11']
+      store.answers.browserTargets || 'last 2 versions, not IE < 11'
     )
   );
 
@@ -108,7 +112,7 @@ const runLanguageInstallTasks = async (store)=> {
           if (!storeCtx.babelInstalled) {
             const output = await storeCtx.packageInstaller.install(
               // TODO @skan-io/babel-config-react
-              '@skan-io/babel-config-nodejs'
+              '@skan-io/babel-config-react'
             );
 
             storeCtx.babelInstalled = true;
@@ -122,8 +126,10 @@ const runLanguageInstallTasks = async (store)=> {
     ]
   };
 
-  if (store.answers.babelPlugins !== 'none') {
-    const plugins = parseBabelPlugins(store.answers.babelPlugins);
+  if (
+    store.answers.babelPlugins !== 'none' && store.answers.babelPlugins !== ''
+  ) {
+    const plugins = parseArrayString(store.answers.babelPlugins);
 
     if (plugins.array.length) {
       task.children.push({
@@ -236,6 +242,58 @@ const runLanguageInstallTasks = async (store)=> {
   await store.runTasks();
 };
 
+const createWriteBabelConfigTask = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Write babel config',
+    children: [
+      {
+        type: 'task',
+        description: 'configure babel config using store',
+        task: (storeCtx)=> {
+          const babelPath = join(storeCtx.workingDir, 'babel.config.js');
+          const babelConfig = createBabelConfig(store);
+
+          fs.writeFileSync(babelPath, babelConfig);
+
+          return {
+            printInfo: `Wrote ${babelPath}`,
+            printSuccess: babelConfig
+          };
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
+const createWriteEslintConfigTask = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Write eslint config',
+    children: [
+      {
+        type: 'task',
+        description: 'write .eslintrc file',
+        task: (storeCtx)=> {
+          const eslintPath = join(storeCtx.workingDir, '.eslintrc');
+          const eslintConfig = createEslintConfig();
+
+          fs.writeFileSync(eslintPath, eslintConfig);
+
+          return {
+            printInfo: `Wrote ${eslintPath}`,
+            printSuccess: eslintConfig
+          };
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
 
 export const checkRestore = async (store)=> {
   const restoreSuccess = checkFields(
@@ -283,4 +341,18 @@ export const init = async (store, config, restore=true)=> {
   }
 };
 
-// TODO run - create babel config based on whether there is testing, webpack and targets
+
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:language')) {
+    await createWriteBabelConfigTask(store);
+
+    if (store.answers.useEslint) {
+      await createWriteEslintConfigTask(store);
+    }
+  }
+
+  store.emit(STEP_COMPLETE, 'run:language');
+  store.completedSteps.push('run:language');
+
+  return ()=> Promise.resolve(null);
+};

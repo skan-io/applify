@@ -26,3 +26,5 @@ export const REPO_AUTH_ERROR = {code: 9, message: 'UNAUTHORISED REPOSITORY'};
 export const GIT_INIT_ERROR = {code: 10, message: 'UNABLE TO INITIALISE GIT'};
 
 export const GIT_PULL_ERROR = {code: 11, message: 'GIT PULL FAILED'};
+
+export const TEMPLATE_COPY_ERROR = {code: 12, message: 'TEMPLATE COPY ERROR'};

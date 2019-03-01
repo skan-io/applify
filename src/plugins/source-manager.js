@@ -373,15 +373,13 @@ const checkoutAndPush = async (store)=> {
     : initialBranches.split(',')
   );
 
+  printInfo('\n-------- COMMIT PROJECT ---------\n');
+
   for (const branch of branches) {
     const task = {
       type: 'batch',
-      description: `Checkout and commit initial branch ${branch}`,
-      children: []
-    }
-
-    if (branch !== 'master') {
-      task.children.push({
+      description: `Checking out and commiting ${branch}`,
+      children: [{
         type: 'task',
         description: `checking out ${branch}`,
         task: async (storeCtx)=> {
@@ -392,21 +390,19 @@ const checkoutAndPush = async (store)=> {
 
           return output;
         }
-      })
+      }, {
+        type: 'task',
+        description: `adding ${branch} files`,
+        task: async (storeCtx)=> {
+          const output = await execute({
+            cmd: 'git add -A',
+            info: `Git add ${branch}`
+          }, false);
+
+          return output;
+        }
+      }]
     }
-
-    task.children.push({
-      type: 'task',
-      description: `adding ${branch} files`,
-      task: async (storeCtx)=> {
-        const output = await execute({
-          cmd: 'git add -A',
-          info: `Git add ${branch}`
-        }, false);
-
-        return output;
-      }
-    });
 
     if (store.answers.useCommitizen) {
       store.addTask(task);
@@ -567,24 +563,26 @@ export const init = async (store, config, restore=true)=> {
 
 export const run = async (store)=> {
  if (!store.completedSteps.some((step)=> step === 'run:source')) {
-   // Run the commitizen setup
+
+  // Run the commitizen setup
   if (store.answers.useCommitizen) {
     await setupCommitizen(store);
   }
 
-  // When we have finished running all the steps we can push the
-  // setup project to github
-  store.on(STORE_RUN, async ()=> {
-    if (store.answers.useGit) {
-      await checkoutAndPush(store);
-    }
+  // The run function will return a promise that will can
+  // be resolved after certain events
+  return ()=> new Promise((resolve)=> {
+    // When we have finished running all the steps we can push the
+    // setup project to github
+    store.on(STORE_RUN, async ()=> {
+      if (store.answers.useGit) {
+        await checkoutAndPush(store);
+      }
 
-    store.emit(STEP_COMPLETE, 'run:source');
-    store.completedSteps.push('run:source');
+      store.emit(STEP_COMPLETE, 'run:source');
+      store.completedSteps.push('run:source');
+      resolve(null);
+    });
   });
  }
 }
-
-
-// TODO run - create branches (with amplify envs) and push all changes, install
-// and setup commitizen

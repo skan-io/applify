@@ -40,7 +40,7 @@ const getEnvironmentDetails = async (store)=> {
   store.addQuestion(
     store.prompter.createQuestion(
       'Use npm or yarn: ',
-      'choices',
+      'list',
       'packageManager',
       'npm',
       ['npm', 'yarn']
@@ -274,4 +274,6 @@ export const run = async (store)=> {
 
   store.emit(STEP_COMPLETE, 'run:project');
   store.completedSteps.push('run:project');
+
+  return ()=> Promise.resolve(null);
 }

@@ -9,7 +9,7 @@ import {
   STORE_PRELOADED,
   STORE_RUN
 } from './events';
-import {newLine, printInfo} from './print';
+import {printInfo} from './print';
 import {resetTempFiles} from './reset';
 
 
@@ -85,18 +85,28 @@ const getSteps = (store, steps)=> {
   return steps;
 };
 
+// eslint-disable-next-line
 const setFilePaths = (store)=> {
+  if (!store.workingDir) {
+    store.workingDir = process.cwd();
+  }
   if (!store.applifyDir) {
     store.applifyDir = join(process.cwd(), '.applify');
   }
   if (!store.applifyTempFile) {
     store.applifyTempFile = join(store.applifyDir, 'temp.json');
   }
-  if (!store.workingDir) {
-    store.workingDir = process.cwd();
-  }
   if (!store.packageJsonFile) {
     store.packageJsonFile = join(process.cwd(), 'package.json');
+  }
+  if (!store.runScriptsDir) {
+    store.runScriptsDir = join(process.cwd(), 'scripts');
+  }
+  if (!store.runScriptsLibsDir) {
+    store.runScriptsLibsDir = join(process.cwd(), 'scripts', 'lib');
+  }
+  if (!store.appSrcDir) {
+    store.appSrcDir = join(process.cwd(), 'src');
   }
 };
 
@@ -162,12 +172,29 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
     }
   }
 
-  printInfo('\n-------- RUN SETUP DETAILS ---------\n');
+  printInfo('\n-------- RUN SETUP ---------\n');
 
-  await store['project'].run(store);
-  await store['source'].run(store);
+  const runPromises = [];
+
+  // const projectPromiseFunc = await store['project'].run(store);
+  // const sourcePromiseFunc = await store['source'].run(store);
+  // const packagePromiseFunc = await store['package'].run(store);
+  // const languagePromiseFunc = await store['language'].run(store);
+  // const buildPromiseFunc = await store['build'].run(store);
+  const testPromiseFunc = await store['test'].run(store);
+
+  runPromises.push(
+    // projectPromiseFunc(),
+    // sourcePromiseFunc(),
+    // packagePromiseFunc(),
+    // languagePromiseFunc(),
+    // buildPromiseFunc()
+    testPromiseFunc()
+  );
 
   store.emit(STORE_RUN);
+
+  await Promise.all(runPromises);
 
   // Run each step
   // for (const step of steps) {
@@ -178,13 +205,6 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
   //     await store[step].run(store, config);
   //   }
   // }
-
-  // Run the initialisation tasks and run the initialisation question
-  await store.runTasks();
-
-  newLine();
-
-  await store.runQuestions();
 };
 
 export default init;

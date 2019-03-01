@@ -17,7 +17,6 @@ const createReadmeHeader = (store)=> {
   }
 
   return `
-  
   <p align="center"><img src='${src}' height='140' /></p>
   <p align="center">
     <b> ${projectName} </b>
@@ -35,11 +34,7 @@ const createReadmeHeader = (store)=> {
     <a><img src="https://img.shields.io/badge/release-alpha-yellow.svg?style=flat-square" alt="Build Status"></a>
     <a href="https://github.com/RichardLitt/standard-readme"><img src="https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square" alt="contributions welcome"></a>
     <a><img src="https://img.shields.io/badge/frontend-react-purple.svg?style=flat-square"></a>
-    ${useRedux ? '<a><img src="https://img.shields.io/badge/state-redux-blue.svg?style=flat-square"></a>' : ''}
-    ${useEslint ? '<a><img src="https://img.shields.io/badge/lint-eslint-pink.svg?style=flat-square"></a>' : ''}
-    ${useAmplify ? '<a><img src="https://img.shields.io/badge/backend-aws-orange.svg?style=flat-square" alt="code style: prettier"></a>' : ''}
-    ${useAmplify ? '<a><img src="https://img.shields.io/badge/api-graphql-purple.svg?style=flat-square"></a>' : ''}
-    ${useStorybook ? '<a><img src="https://img.shields.io/badge/ui-storybook-lightgrey.svg?style=flat-square"></a>' : ''}
+    ${useRedux ? '<a><img src="https://img.shields.io/badge/state-redux-blue.svg?style=flat-square"></a>' : ''}${useEslint ? '\n    <a><img src="https://img.shields.io/badge/lint-eslint-pink.svg?style=flat-square"></a>' : ''}${useAmplify ? '\n    <a><img src="https://img.shields.io/badge/backend-aws-orange.svg?style=flat-square" alt="code style: prettier"></a>' : ''}${useAmplify ? '\n    <a><img src="https://img.shields.io/badge/api-graphql-purple.svg?style=flat-square"></a>' : ''}${useStorybook ? '\n    <a><img src="https://img.shields.io/badge/ui-storybook-lightgrey.svg?style=flat-square"></a>' : ''}
   </p>
 
   <p> &nbsp; </p>
@@ -210,14 +205,14 @@ const createTestSection = (store)=> `
 Before committing and pushing code you should run the full suite of tests.
 ${store.answers.useEslint ? 'The full test command includes linting from `eslint`.' : ''}
 The unit-tests are using [jest](https://facebook.github.io/jest/)
-with config from [jest.config.json](./jest.config.json):
+with config from [jest.config.js](./jest.config.js):
 
 \`\`\`bash
 npx run test
 \`\`\`
 
 ${store.answers.useCodeCoverage
-    ? 'You will find code coverage results in `build/cov` including a HTML report:\n```bash\n open ./build/cov/lcov-report/index.html ```\n'
+    ? 'You will find code coverage results in `build/cov` including a HTML report:\n```bash\n open ./build/cov/lcov-report/index.html \n```\n'
     : ''
 }
 
@@ -238,14 +233,14 @@ npx run jest
 npx run jest FILE_PATH_TO_MATCH
 \`\`\`
 
-where FULL_FILE_PATH is the path from the root to the test (e.g. - src/app/reducer.test.js)
+where FILE_PATH_TO_MATCH is the path to match (e.g. - app/reducer)
 
-NOTE: that if you are running on Windows, you have to specify double slashes for
-the path (e.g. - src\\app\\reducer.test.js).
-
-\`\`\`bash
-npx run jest src\\app\\reducer.test.js
-\`\`\`\n
+>NOTE: that if you are running on Windows, you have to specify double slashes for
+>the path:
+>
+>\`\`\`bash
+>npx run jest src\\\\app\\\\reducer.test.js
+>\`\`\`\n
 `;
 
 const createDocumentationSection = (store)=> `
@@ -501,7 +496,7 @@ export const createReadme = async (store)=> {
     type: 'task',
     description: 'create readme footer section',
     task: (storeCtx)=> {
-      store.readme += createReadmeFooter(storeCtx);
+      storeCtx.readme += createReadmeFooter(storeCtx);
 
       return {
         printInfo: 'Created readme footer section'
@@ -522,7 +517,7 @@ export const createReadme = async (store)=> {
 
           return {
             printInfo: `Wrote README.md to ${storeCtx.workingDir}/README.md`,
-            printSuccess: store.readme
+            printSuccess: storeCtx.readme
           };
         }
       }

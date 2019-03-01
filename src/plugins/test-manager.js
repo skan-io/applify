@@ -1,6 +1,9 @@
+import fs from 'fs';
+import {join} from 'path';
 import {STEP_COMPLETE} from '../events';
 import {checkFields} from './utils';
 import {printInfo, printDim} from '../print';
+import {createJestConfig} from './create-jest-config';
 
 
 const COVERAGE_PERCENTAGE = 100;
@@ -154,6 +157,32 @@ const setNoCoverageAnswers = (store)=> {
   store.answers.linesPercentageCoverage = 0;
 };
 
+const writeJestConfigTask = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Write jest config',
+    children: [
+      {
+        type: 'task',
+        description: 'write jest.config.js',
+        task: (storeCtx)=> {
+          const jestPath = join(storeCtx.workingDir, 'jest.config.js');
+          const jestConfig = createJestConfig(store);
+
+          fs.writeFileSync(jestPath, jestConfig);
+
+          return {
+            printInfo: `Wrote ${jestPath}`,
+            printSuccess: jestConfig
+          };
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+};
+
 // eslint-disable-next-line max-statements
 export const checkRestore = async (store)=> {
   const restoreSuccess = checkFields(
@@ -206,6 +235,20 @@ export const init = async (store, config, restore=true)=> {
     store.emit(STEP_COMPLETE, 'init:test');
     store.completedSteps.push('init:test');
   }
+};
+
+
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:test')) {
+    if (store.answers.useJest) {
+      await writeJestConfigTask(store);
+    }
+  }
+
+  // store.emit(STEP_COMPLETE, 'run:test');
+  // store.completedSteps.push('run:test');
+
+  return ()=> Promise.resolve(null);
 };
 
 // TODO run - setup jest file, extend with react web app jest test requirements,
