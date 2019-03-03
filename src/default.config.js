@@ -3,15 +3,16 @@ import {gitAccessToken} from './private-config.js';
 // Plugins config
 const config = ()=> ({
   // TODO eventually infer the step dependencies
+  // TODO break into init and run steps
   steps: [
     'project',
     'source',
     'package',
     'language',
     'build',
+    'deploy',
     'test',
     'style',
-    // 'deploy',
     // 'module',
     // 'docs'
   ],
@@ -31,6 +32,7 @@ const config = ()=> ({
   language: '@skan-io/applify/language-manager',
   build: '@skan-io/applify/build-manager',
   test: '@skan-io/applify/test-manager',
+  deploy: '@skan-io/applify/deploy-manager',
   style: '@skan-io/applify/style-manager'
 });
 

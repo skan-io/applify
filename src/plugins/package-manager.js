@@ -7,9 +7,7 @@ import {stringify} from '../utils/strings';
 import {createConfigScript, createRunScript} from './create-scripts';
 
 
-export const requiredFields = [
-  'packageInstallerAttached', 'packageJsonExists', 'npxRunInstalled'
-];
+export const requiredFields = [];
 
 export const requiredAnswers = [];
 
@@ -154,8 +152,6 @@ const runPackageInitialisationTasks = async (store)=> {
   }
 
   store.addTask(task);
-
-  await store.runTasks();
 };
 
 const installSupportTools = async (store)=> {
@@ -176,8 +172,6 @@ const installSupportTools = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 const createScriptsDirectory = async (store)=> {
@@ -252,8 +246,6 @@ const createScriptsDirectory = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 export const checkRestore = async (store)=> {
@@ -262,18 +254,13 @@ export const checkRestore = async (store)=> {
 };
 
 export const init = async (store)=> {
-  await runPackageInitialisationTasks(store);
-
-  if (!store.packageManager === 'npm') {
-    store.npxRunInstalled = false;
-  }
-
   store.emit(STEP_COMPLETE, 'init:package');
   store.completedSteps.push('init:package');
 };
 
 export const run = async (store)=> {
   if (!store.completedSteps.some((step)=> step === 'run:package')) {
+    await runPackageInitialisationTasks(store);
     await installSupportTools(store);
     await createScriptsDirectory(store);
   }

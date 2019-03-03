@@ -35,7 +35,7 @@ module.exports = {
   },
 
   snapshotSerializers: [
-    '<rootDir>/src/snapshots/serializer'
+    '<rootDir>/src/testing/snapshots/serializer'
   ],
 
   collectCoverage: ${answers.useCodeCoverage},

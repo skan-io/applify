@@ -12,7 +12,8 @@ import {
   GIT_PULL_ERROR
 } from '../error/error-codes';
 import {STEP_COMPLETE, STORE_RUN} from '../events';
-import {expectDefined, checkFields} from './utils';
+import {expectDefined, checkFields, parseArrayString} from './utils';
+import {stringify} from '../utils/strings';
 
 
 export const requiredAnswers = [
@@ -30,13 +31,11 @@ export const requiredAnswers = [
   {
     question: 'Enter your GitHub personal access token: ',
     field: 'gitAccessToken'
-  }
+  },
+  {question: 'Would you like lock down master: ', field: 'lockMasterBranch'}
 ];
 
-export const requiredFields = [
-  'gitInitialised', 'gitUpToDate', 'gitRemoteAdded',
-  'gitUrl', 'gitSSHUrl', 'gitHtmlUrl'
-];
+export const requiredFields = [];
 
 
 const getShouldUseGit = async (store)=> {
@@ -112,6 +111,15 @@ const getRepoDetails = async (store, config)=> {
       'input',
       'initialBranches',
       store.answers.initialBranches || initialBranches
+    )
+  );
+
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Would you like lock down master: ',
+      'confirm',
+      'lockMasterBranch',
+      store.answers.lockMasterBranch || true
     )
   );
 
@@ -280,8 +288,6 @@ const runGitInitialisationTasks = async (store)=> {
       getPullCurrentMasterTask()
     ]
   });
-
-  await store.runTasks();
 };
 
 const getGitignoreString = ()=> `
@@ -325,8 +331,6 @@ const runRewriteGitIgnoreTask = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 }
 
 // eslint-disable-next-line max-statements
@@ -372,8 +376,6 @@ const checkoutAndPush = async (store)=> {
     ? initialBranches
     : initialBranches.split(',')
   );
-
-  printInfo('\n-------- COMMIT PROJECT ---------\n');
 
   for (const branch of branches) {
     const task = {
@@ -483,30 +485,95 @@ const setupCommitizen = async (store)=> {
     ]
   });
 
-  if (store.answers.privatePackage) {
-    store.addTask({
-      type: 'batch',
-      description: 'Remove .releaserc',
-      children: [
-        {
-          type: 'task',
-          description: 'remove .releaserc (for public packages)',
-          task: (storeCtx)=> {
-            const releaseFile = join(storeCtx.workingDir, '.releaserc');
+  store.addTask({
+    type: 'batch',
+    description: 'Rewrite .releaserc',
+    children: [
+      {
+        type: 'task',
+        description: 'rewrite .releaserc (no npm release)',
+        task: (storeCtx)=> {
+          const releaseFile = join(storeCtx.workingDir, '.releaserc');
+          const releaseJson = JSON.parse(fs.readFileSync(releaseFile, 'utf8'));
+          releaseJson.plugins = [
+            '@semantic-release/commit-analyzer',
+            '@semantic-release/release-notes-generator',
+            [
+              '@semantic-release/npm',
+              {
+                npmPublish: false
+              }
+            ],
+            '@semantic-release/github'
+          ];
+          const releaseString = stringify(releaseJson);
 
-            fs.unlinkSync(releaseFile);
+          fs.writeFileSync(releaseFile, releaseString);
 
-            return {
-              printInfo: `Removed ${releaseFile}`
-            }
+          return {
+            printInfo: `Rewrote ${releaseFile}`,
+            printSuccess: releaseString
           }
         }
-      ]
-    });
-  }
+      }
+    ]
+  });
 
   await store.runTasks();
 };
+
+const lockDownMasterBranch = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Lock down master branch',
+    children: [
+      {
+        type: 'task',
+        description: 'update master branch protection',
+        task: async (storeCtx)=> {
+          const {repoOrg, repoOwner, projectName, useCi, ciPlatform, repoMaintainers, privatePackage} = storeCtx.answers;
+          const {response, printInfo, printSuccess} = await fetch(
+            `https://api.github.com/repos/${repoOrg === undefined || repoOrg === '' || repoOrg === 'none' ? repoOwner : repoOrg}/${projectName}/branches/master/protection`,
+            'PUT',
+            JSON.stringify({
+              required_status_checks: useCi && !privatePackage ? {
+                strict: true,
+                contexts: [
+                  `continuous-integration/${ciPlatform}/pr`,
+                  `continuous-integration/${ciPlatform}/push`
+                ]
+              } : undefined,
+              enforce_admins: true,
+              required_pull_request_reviews: {
+                dismissal_restrictions: repoOrg ? {
+                  users: [repoOwner]
+                } : undefined,
+                dismiss_stale_reviews: true,
+                // Dont want to lock down branches if only 1 maintainer
+                require_code_owner_reviews: parseArrayString(repoMaintainers).array.length ? true : false,
+                required_approving_review_count: 1
+              },
+              restrictions: repoOrg ? {
+                users: parseArrayString(repoMaintainers).array
+              } : null
+            }),
+            storeCtx.answers.gitAccessToken,
+            'application/json',
+            'application/vnd.github.luke-cage-preview+json',
+            true
+          );
+
+          return {
+            printInfo,
+            printSuccess
+          }
+        }
+      }
+    ]
+  });
+
+  await store.runTasks();
+}
 
 // eslint-disable-next-line max-statements, complexity
 export const checkRestore = async (store, config)=> {
@@ -545,15 +612,9 @@ export const init = async (store, config, restore=true)=> {
     await checkRestore(store, config);
   } else {
     await getShouldUseGit(store);
-
     if (store.answers.useGit) {
       await getRepoDetails(store, config);
       await getGitAccessToken(store, config);
-
-      await runGitInitialisationTasks(store);
-      await runRewriteGitIgnoreTask(store);
-    } else {
-      setStoreNoGit(store);
     }
 
     store.emit(STEP_COMPLETE, 'init:source');
@@ -565,8 +626,9 @@ export const run = async (store)=> {
  if (!store.completedSteps.some((step)=> step === 'run:source')) {
 
   // Run the commitizen setup
-  if (store.answers.useCommitizen) {
-    await setupCommitizen(store);
+  if (store.answers.useGit) {
+    await runGitInitialisationTasks(store);
+    await runRewriteGitIgnoreTask(store);
   }
 
   // The run function will return a promise that will can
@@ -576,7 +638,15 @@ export const run = async (store)=> {
     // setup project to github
     store.on(STORE_RUN, async ()=> {
       if (store.answers.useGit) {
+        printInfo('\n-------- COMMIT PROJECT ---------\n');
+        if (store.answers.useCommitizen) {
+          await setupCommitizen(store);
+        }
         await checkoutAndPush(store);
+        // Lock down the master branch, set up travis hooks, after first push
+        if (store.answers.lockMasterBranch) {
+          await lockDownMasterBranch(store);
+        }
       }
 
       store.emit(STEP_COMPLETE, 'run:source');

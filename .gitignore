@@ -9,7 +9,7 @@ npm-debug.log
 .vscode
 
 # Build artifacts
-build
+./build
 
 .applify
 

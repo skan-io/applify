@@ -19,18 +19,26 @@ const addStoryBook = ()=> `    devServer: {
     }`;
 
 
-export const createWebpackConfig = ({answers})=> `import webpackInitialiser from '@skan-io/webpack-config-base'${answers.useStorybook ? '\nimport storybook from \'@storybook/core/dist/server/middleware\';' : ''}
+export const createWebpackConfig = ({answers})=> `/* eslint-env node */
+/* eslint no-console: 0 */
+${answers.useStorybook ? `import {resolve} from 'path';\n` : ''}import webpackInitialiser from '@skan-io/webpack-config-base';${answers.useStorybook ? '\nimport storybook from \'@storybook/core/dist/server/dev-server\';' : ''}
 import {version, deployPath, deployUrl, nodeEnv} from './build/config';
 
 
 export default ()=> {
+  const buildEntries = [${parseArrayString(answers.buildEntries).array.map((target)=> `'${target}'`).toString()}];
+  const buildOutputPath = '${answers.buildOutputPath}';
+  const devServerPort = ${answers.devServerPort};
+  const faviconUrl = '${isUrl(answers.faviconUrl) || answers.faviconUrl.startsWith('http') ? 'favicon.png' : answers.faviconUrl}';
+  const useSass = ${answers.styleChoice === 'sass'};
+
   // Creates build entry points, output paths and plugin configs
   const webpackConfig = webpackInitialiser(
-    [${parseArrayString(answers.buildEntries).array.map((target)=> `'${target}'`).toString()}],
-    '${answers.buildOutputPath}',
-    ${answers.devServerPort},
-    '${isUrl(answers.faviconUrl) || answers.faviconUrl.startsWith('http') ? 'favicon.png' : answers.faviconUrl}',
-    ${answers.styleChoice === 'sass'}
+    buildEntries,
+    buildOutputPath,
+    devServerPort,
+    faviconUrl,
+    useSass
   );
 
   const isProduction = (nodeEnv === 'production');

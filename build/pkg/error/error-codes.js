@@ -1,0 +1,66 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TEMPLATE_COPY_ERROR = exports.GIT_PULL_ERROR = exports.GIT_INIT_ERROR = exports.REPO_AUTH_ERROR = exports.REPO_CREATE_ERROR = exports.REPO_ALREADY_EXISTS = exports.RESTORE_ERROR = exports.PLUGINS_OUT_OF_SYNC = exports.PKGMGR_VERSION_ERROR = exports.NODE_VERSION_ERROR = exports.PLUGIN_IMPORT_ERROR = exports.EXECUTION_ERROR = void 0;
+const EXECUTION_ERROR = {
+  code: 1,
+  message: 'EXECUTION ERROR'
+};
+exports.EXECUTION_ERROR = EXECUTION_ERROR;
+const PLUGIN_IMPORT_ERROR = {
+  code: 2,
+  message: 'PLUGIN IMPORT ERROR'
+};
+exports.PLUGIN_IMPORT_ERROR = PLUGIN_IMPORT_ERROR;
+const NODE_VERSION_ERROR = {
+  code: 3,
+  message: 'NODE VERSION ERROR'
+};
+exports.NODE_VERSION_ERROR = NODE_VERSION_ERROR;
+const PKGMGR_VERSION_ERROR = {
+  code: 4,
+  message: 'PACKAGE MANAGER VERSION ERROR'
+};
+exports.PKGMGR_VERSION_ERROR = PKGMGR_VERSION_ERROR;
+const PLUGINS_OUT_OF_SYNC = {
+  code: 5,
+  message: 'PLUGINS OUT OF SYNC'
+};
+exports.PLUGINS_OUT_OF_SYNC = PLUGINS_OUT_OF_SYNC;
+const RESTORE_ERROR = {
+  code: 6,
+  message: 'RESTORE STORE OUT OF SYNC'
+};
+exports.RESTORE_ERROR = RESTORE_ERROR;
+const REPO_ALREADY_EXISTS = {
+  code: 7,
+  message: 'REPOSITORY ALREADY EXISTS'
+};
+exports.REPO_ALREADY_EXISTS = REPO_ALREADY_EXISTS;
+const REPO_CREATE_ERROR = {
+  code: 8,
+  message: 'CANNOT CREATE REPOSITORY'
+};
+exports.REPO_CREATE_ERROR = REPO_CREATE_ERROR;
+const REPO_AUTH_ERROR = {
+  code: 9,
+  message: 'UNAUTHORISED REPOSITORY'
+};
+exports.REPO_AUTH_ERROR = REPO_AUTH_ERROR;
+const GIT_INIT_ERROR = {
+  code: 10,
+  message: 'UNABLE TO INITIALISE GIT'
+};
+exports.GIT_INIT_ERROR = GIT_INIT_ERROR;
+const GIT_PULL_ERROR = {
+  code: 11,
+  message: 'GIT PULL FAILED'
+};
+exports.GIT_PULL_ERROR = GIT_PULL_ERROR;
+const TEMPLATE_COPY_ERROR = {
+  code: 12,
+  message: 'TEMPLATE COPY ERROR'
+};
+exports.TEMPLATE_COPY_ERROR = TEMPLATE_COPY_ERROR;

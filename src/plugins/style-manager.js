@@ -3,7 +3,7 @@ import {checkFields} from './utils';
 import {printInfo, printDim} from '../print';
 
 
-export const requiredFields = ['storybookInstalled'];
+export const requiredFields = [];
 
 export const requiredAnswers = [
   {question: 'Choose your style: ', field: 'styleChoice'},
@@ -47,6 +47,20 @@ const getStyleDetails = async (store)=> {
   );
 
   printInfo('\n-------- UI DETAILS ---------\n');
+
+  await store.runQuestions();
+};
+
+const getStorybookDetails = async (store)=> {
+  store.addQuestion(
+    store.prompter.createQuestion(
+      'Storybook server port: ',
+      'input',
+      'storybookServerPort',
+      // eslint-disable-next-line no-magic-numbers
+      store.answers.storybookServerPort || 8080
+    )
+  );
 
   await store.runQuestions();
 };
@@ -100,14 +114,24 @@ export const init = async (store, config, restore=true)=> {
     await checkRestore(store);
   } else {
     await getStyleDetails(store);
-
     if (store.answers.useStorybook) {
-      await installStorybook(store);
-    } else {
-      store.storybookInstalled = false;
+      await getStorybookDetails(store);
     }
   }
 
   store.emit(STEP_COMPLETE, 'init:style');
   store.completedSteps.push('init:style');
+};
+
+export const run = async (store)=> {
+  if (!store.completedSteps.some((step)=> step === 'run:style')) {
+    if (store.answers.useStorybook) {
+      await installStorybook(store);
+    }
+  }
+
+  store.emit(STEP_COMPLETE, 'run:style');
+  store.completedSteps.push('run:style');
+
+  return ()=> Promise.resolve(null);
 };

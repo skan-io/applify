@@ -41,21 +41,24 @@ export const runQuestions = async (questions, store)=> {
 // eslint-disable-next-line max-params
 export const createQuestion =
   // eslint-disable-next-line
-  (question, type, value, defaultValue, choices=[])=> ({
+  (question, type, value, defaultValue, choices=[], validate=()=>true)=> ({
     message: question,
     type,
     default: defaultValue,
     name: value,
-    choices
+    choices,
+    validate
   });
 
 // Similar to above but allows for creating of question variables at runtime
 export const createRuntimeQuestion =
   // eslint-disable-next-line
-  (question, type, value, defaultValue, choices=()=>[])=> async (store)=> ({
-    message: await question(store),
-    type: await type(store),
-    default: await defaultValue(store),
-    name: await value(store),
-    choices: await choices(store)
-  });
+  (question, type, value, defaultValue, choices=()=>[], validate=()=>true)=>
+    async (store)=> ({
+      message: await question(store),
+      type: await type(store),
+      default: await defaultValue(store),
+      name: await value(store),
+      choices: await choices(store),
+      validate: await validate(store)
+    });

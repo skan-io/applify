@@ -172,25 +172,31 @@ const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
     }
   }
 
-  printInfo('\n-------- RUN SETUP ---------\n');
+  printInfo('\n-------- PROJECT SETUP ---------\n');
 
   const runPromises = [];
 
-  // const projectPromiseFunc = await store['project'].run(store);
-  // const sourcePromiseFunc = await store['source'].run(store);
-  // const packagePromiseFunc = await store['package'].run(store);
-  // const languagePromiseFunc = await store['language'].run(store);
-  // const buildPromiseFunc = await store['build'].run(store);
+  const sourcePromiseFunc = await store['source'].run(store);
+  const projectPromiseFunc = await store['project'].run(store);
+  const packagePromiseFunc = await store['package'].run(store);
+  const languagePromiseFunc = await store['language'].run(store);
+  const buildPromiseFunc = await store['build'].run(store);
   const testPromiseFunc = await store['test'].run(store);
+  const stylePromiseFunc = await store['style'].run(store);
+  const deployPromiseFunc = await store['deploy'].run(store);
 
   runPromises.push(
-    // projectPromiseFunc(),
-    // sourcePromiseFunc(),
-    // packagePromiseFunc(),
-    // languagePromiseFunc(),
-    // buildPromiseFunc()
-    testPromiseFunc()
+    projectPromiseFunc(),
+    sourcePromiseFunc(),
+    packagePromiseFunc(),
+    languagePromiseFunc(),
+    buildPromiseFunc(),
+    testPromiseFunc(),
+    stylePromiseFunc(),
+    deployPromiseFunc()
   );
+
+  await store.runTasks();
 
   store.emit(STORE_RUN);
 

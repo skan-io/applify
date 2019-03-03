@@ -13,7 +13,7 @@ export const requiredAnswers = [
   {question: 'Favicon url: ', field: 'faviconUrl'}
 ];
 
-export const requiredFields = ['webpackInstalled'];
+export const requiredFields = [];
 
 
 const getBuildDetails = async (store)=> {
@@ -85,8 +85,6 @@ const runWebpackSetupTasks = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 const createWriteWebpackConfigTask = async (store)=> {
@@ -113,8 +111,6 @@ const createWriteWebpackConfigTask = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 // eslint-disable-next-line max-statements
@@ -140,7 +136,6 @@ export const init = async (store)=> {
   } else {
 
     await getBuildDetails(store);
-    await runWebpackSetupTasks(store);
 
     store.emit(STEP_COMPLETE, 'init:build');
     store.completedSteps.push('init:build');
@@ -149,6 +144,7 @@ export const init = async (store)=> {
 
 export const run = async (store)=> {
   if (!store.completedSteps.some((step)=> step === 'run:build')) {
+    await runWebpackSetupTasks(store);
     await createWriteWebpackConfigTask(store);
   }
 

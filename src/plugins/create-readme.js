@@ -523,6 +523,4 @@ export const createReadme = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };

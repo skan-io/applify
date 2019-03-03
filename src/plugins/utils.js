@@ -8,17 +8,10 @@ import {TEMPLATE_COPY_ERROR} from '../error/error-codes';
 export const expectDefined = (path)=> {
   try {
     return path !== undefined;
-  } catch {
+  } catch (err) {
     return false;
   }
 }
-
-export const getScopedProject = (orgScope, projectName)=> (
-  orgScope === 'none' || orgScope === undefined
-    ? projectName
-    // eslint-disable-next-line max-len
-    : `@${orgScope.startsWith('@') ? orgScope.substr(1) : orgScope}/${projectName}`
-);
 
 export const checkFields = (store, pluginName, answers, fields)=> {
   let restoreSuccess = true;
@@ -67,9 +60,8 @@ export const parseArrayString = (array)=> {
     array: [],
     string: ''
   };
-}
+};
 
-// eslint-disable-next-line
 export const addResourceFromTemplate = (
     filename,
     srcFile=join(dirname(process.argv[1]), 'templates', filename),
@@ -88,8 +80,23 @@ export const addResourceFromTemplate = (
     if (throwOnError) {
       throw applifyError(
         TEMPLATE_COPY_ERROR.code,
+        // eslint-disable-next-line max-len
         `${TEMPLATE_COPY_ERROR.message}: failed to copy ${srcFile} to ${destFile} with ${err}`
       );
     }
   }
-}
+};
+
+export const createDirectory = (directory)=> {
+  let printSuccess = `Found ${directory}`;
+
+  if (!fs.existsSync(directory)) {
+    fs.mkdirSync(directory);
+    printSuccess = `Created ${directory}`;
+  }
+
+  return {
+    printInfo: `Find or create ${directory}`,
+    printSuccess
+  };
+};

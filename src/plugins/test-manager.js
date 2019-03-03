@@ -4,6 +4,9 @@ import {STEP_COMPLETE} from '../events';
 import {checkFields} from './utils';
 import {printInfo, printDim} from '../print';
 import {createJestConfig} from './create-jest-config';
+import {addResourceFromTemplate} from './utils';
+
+/* eslint max-len: 0 */
 
 
 const COVERAGE_PERCENTAGE = 100;
@@ -21,7 +24,7 @@ export const requiredAnswers = [
   {question: 'Lines %: ', field: 'linesPercentageCoverage'}
 ];
 
-export const requiredFields = ['jestInstalled', 'enzymeInstalled'];
+export const requiredFields = [];
 
 
 const getShouldTest = async (store)=> {
@@ -147,7 +150,6 @@ const runJestInstallationTasks = async (store)=> {
   }
 
   store.addTask(task);
-  await store.runTasks();
 };
 
 const setNoCoverageAnswers = (store)=> {
@@ -179,8 +181,90 @@ const writeJestConfigTask = async (store)=> {
       }
     ]
   });
+};
 
-  await store.runTasks();
+const createTestingSetupFiles = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Create jest setup files',
+    children: [
+      {
+        type: 'task',
+        description: 'create testing directory',
+        task: (storeCtx)=> {
+          const testingDir = join(storeCtx.appSrcDir, 'testing');
+          let printSuccess = `Found ${testingDir}`;
+
+          if (!fs.existsSync(testingDir)) {
+            fs.mkdirSync(testingDir);
+            printSuccess = `Created ${testingDir}`;
+          }
+
+          return {
+            printInfo: `Find or create ${testingDir}`,
+            printSuccess
+          };
+        }
+      },
+      {
+        type: 'task',
+        description: 'create serializer directory',
+        task: (storeCtx)=> {
+          const snapshotsDir = join(storeCtx.appSrcDir, 'testing', 'snapshots');
+
+          if (!fs.existsSync(snapshotsDir)) {
+            fs.mkdirSync(snapshotsDir);
+          }
+
+          const serializerDir = join(storeCtx.appSrcDir, 'testing', 'snapshots', 'serializer');
+          let printSuccess = `Found ${serializerDir}`;
+
+          if (!fs.existsSync(serializerDir)) {
+            fs.mkdirSync(serializerDir);
+            printSuccess = `Created ${serializerDir}`;
+          }
+
+          return {
+            printInfo: `Find or create ${serializerDir}`,
+            printSuccess
+          };
+        }
+      },
+      {
+        type: 'task',
+        description: 'copy testing template files',
+        // eslint-disable-next-line max-statements
+        task: (storeCtx)=> {
+          addResourceFromTemplate('src/testing/mock-file.js');
+          addResourceFromTemplate('src/testing/setup-framework.js');
+          addResourceFromTemplate('src/testing/setup-framework.test.js');
+          addResourceFromTemplate('src/testing/setup.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/index.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/index.test.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/shallow.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/shallow.test.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/utils.js');
+          addResourceFromTemplate('src/testing/snapshots/serializer/utils.test.js');
+          addResourceFromTemplate(
+            'src/testing/mock-scss.js',
+            undefined,
+            join(
+              process.cwd(),
+              'src',
+              'testing',
+              storeCtx.answers.styleChoice === 'sass'
+                ? 'mock-scss.js'
+                : 'mock-css.js'
+            )
+          );
+
+          return {
+            printInfo: `Copied test files to ${storeCtx.appSrcDir}/testing`
+          };
+        }
+      }
+    ]
+  });
 };
 
 // eslint-disable-next-line max-statements
@@ -220,15 +304,7 @@ export const init = async (store, config, restore=true)=> {
       } else {
         setNoCoverageAnswers(store);
       }
-
-      if (!store.answers.useEnzyme) {
-        store.enzymeInstalled = false;
-      }
-
-      await runJestInstallationTasks(store);
     } else {
-      store.jestInstalled = false;
-      store.enzymeInstalled = false;
       setNoCoverageAnswers(store);
     }
 
@@ -241,15 +317,14 @@ export const init = async (store, config, restore=true)=> {
 export const run = async (store)=> {
   if (!store.completedSteps.some((step)=> step === 'run:test')) {
     if (store.answers.useJest) {
+      await runJestInstallationTasks(store);
       await writeJestConfigTask(store);
+      await createTestingSetupFiles(store);
     }
   }
 
-  // store.emit(STEP_COMPLETE, 'run:test');
-  // store.completedSteps.push('run:test');
+  store.emit(STEP_COMPLETE, 'run:test');
+  store.completedSteps.push('run:test');
 
   return ()=> Promise.resolve(null);
 };
-
-// TODO run - setup jest file, extend with react web app jest test requirements,
-// create testing module

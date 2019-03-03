@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {sep} from 'path';
 import {execute} from '../execute';
 import {applifyError} from '../error';
@@ -194,7 +195,7 @@ const getProjectDetails = async (store)=> {
       'list',
       'projectLicense',
       store.answers.projectLicense || 'MIT',
-      ['MIT', 'Apache-2.0', 'GPL-3.0', 'BSD-2-clause', 'BSD-3-clause', 'CC', 'WTFPL', 'UNLICENSE']
+      ['MIT', 'ISC', 'Apache-2.0', 'GPL-3.0', 'BSD-2-clause', 'BSD-3-clause', 'CC', 'WTFPL', 'UNLICENSE']
     )
   );
 
@@ -224,12 +225,41 @@ const getProjectDetails = async (store)=> {
       'Is this a private project: ',
       'confirm',
       'privatePackage',
-      store.answers.privatePackage || false
+      store.answers.privatePackage || true
     )
   );
 
   printInfo('\n-------- PROJECT DETAILS ---------\n');
   await store.runQuestions();
+};
+
+const createSrcDirectory = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Create src directory',
+    children: [
+      {
+        type: 'task',
+        description: 'find or create src directory',
+        task: (storeCtx)=> {
+          const {appSrcDir} = storeCtx;
+          let printSuccess = `Found ${appSrcDir}`;
+
+          if (!fs.existsSync(appSrcDir)) {
+            fs.mkdirSync(appSrcDir);
+            printSuccess = `Created ${appSrcDir}`;
+          }
+
+          return {
+            printInfo: `Find or create local scripts directory`,
+            printSuccess
+          };
+        }
+      }
+    ]
+  });
+
+  // await store.runTasks();
 };
 
 // eslint-disable-next-line max-statements
@@ -270,6 +300,7 @@ export const init = async (store, config, restore=true)=> {
 export const run = async (store)=> {
   if (!store.completedSteps.some((step)=> step === 'run:project')) {
     await createReadme(store);
+    await createSrcDirectory(store);
   }
 
   store.emit(STEP_COMPLETE, 'run:project');

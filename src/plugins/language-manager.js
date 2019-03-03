@@ -7,13 +7,7 @@ import {createBabelConfig} from './create-babel-config';
 import {createEslintConfig} from './create-eslint-config';
 
 
-export const requiredFields = [
-  'babelInstalled',
-  'reactInstalled',
-  'reduxInstalled',
-  'routerInstalled',
-  'eslintInstalled'
-];
+export const requiredFields = [];
 
 export const requiredAnswers = [
   {question: 'Node target: ', field: 'nodeTarget'},
@@ -103,7 +97,7 @@ const getLinterDetails = async (store)=> {
 const runLanguageInstallTasks = async (store)=> {
   const task = {
     type: 'batch',
-    description: 'Install babel, react and redux dependencies',
+    description: 'Install core language dependencies',
     children: [
       {
         type: 'task',
@@ -238,8 +232,6 @@ const runLanguageInstallTasks = async (store)=> {
   });
 
   store.addTask(task);
-
-  await store.runTasks();
 };
 
 const createWriteBabelConfigTask = async (store)=> {
@@ -264,8 +256,6 @@ const createWriteBabelConfigTask = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 const createWriteEslintConfigTask = async (store)=> {
@@ -290,8 +280,6 @@ const createWriteEslintConfigTask = async (store)=> {
       }
     ]
   });
-
-  await store.runTasks();
 };
 
 
@@ -324,7 +312,6 @@ export const init = async (store, config, restore=true)=> {
     await getReduxDetails(store);
     await getRouterDetails(store);
     await getLinterDetails(store);
-    await runLanguageInstallTasks(store);
 
     if (!store.answers.useRedux) {
       store.reduxInstalled = false;
@@ -344,6 +331,7 @@ export const init = async (store, config, restore=true)=> {
 
 export const run = async (store)=> {
   if (!store.completedSteps.some((step)=> step === 'run:language')) {
+    await runLanguageInstallTasks(store);
     await createWriteBabelConfigTask(store);
 
     if (store.answers.useEslint) {

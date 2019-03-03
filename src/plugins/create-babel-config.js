@@ -6,9 +6,10 @@ export const createBabelConfig = (store)=> `const configFunc = require('@skan-io
 module.exports = {
   ...configFunc.default(
     ${store.answers.useJest ? 'true' : 'false'},
-    [${parseArrayString(store.answers.browserTargets).array.map((target)=> `'${target}'`).toString()}],
-    ['last 1 Chrome versions'],
-    [${parseArrayString(store.answers.babelPlugins).string}]
+    '${store.answers.nodeTarget}', // Node version to target
+    [${parseArrayString(store.answers.browserTargets).array.map((target)=> `'${target}'`).toString()}], // Browser targets
+    ['last 1 Chrome versions'], // Development browser targets
+    [${parseArrayString(store.answers.babelPlugins).string}] // Extra babel plugins
   )
 };
 `;
