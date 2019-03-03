@@ -10,3 +10,8 @@ npm-debug.log
 
 # Build artifacts
 build
+
+.applify
+
+# Test config
+src/private-config.js

@@ -1,6 +1,6 @@
 {
-  "branch": "master",
-  "dryRun": false,
-  "debug": true,
-  "pkgRoot": "build/pkg"
+    "branch": "master",
+    "dryRun": false,
+    "debug": true,
+    "pkgRoot": "build/pkg"
 }

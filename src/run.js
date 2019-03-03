@@ -1,6 +1,7 @@
 import commander from 'commander';
-import {runInit} from './initializer';
 import pkgJson from './package.json';
+import {printHeadingAndArt} from './print';
+import init from './init';
 
 
 const run = async (argv)=> {
@@ -12,17 +13,20 @@ const run = async (argv)=> {
     .command('init')
     .alias('i')
     .description('Create a new react project')
-    .option('--log', 'Log task output')
-    .option('--reset', 'Reset any saved applify variables')
+    .option('-l, --log', 'Log task output')
+    .option('-r, --reset', 'Reset any saved applify variables')
+    .option('-c, --config', 'Use a config file')
+    .option('-d, --dev', 'Use development mode')
     .action(async (cmd)=> {
+
       global.log = cmd.log;
 
-      if (cmd.reset) {
-        // TODO delete the .applify directory
-        console.log(cmd.reset);
-      }
-
-      await runInit();
+      await printHeadingAndArt();
+      await init({
+        devMode: cmd.dev,
+        reset: cmd.reset,
+        useConfig: cmd.config
+      });
     });
 
   await program.parse(argv);
