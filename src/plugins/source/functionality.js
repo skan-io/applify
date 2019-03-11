@@ -10,7 +10,8 @@ import {
   GIT_INIT_ERROR
 } from '../../error/codes';
 import {rewriteGitIgnoreTask} from './create-gitignore';
-import {stringify, parseArrayString} from '../utils';
+import {stringify} from '../../utils/strings';
+import {parseArrayString} from '../utils';
 import {parseAndReorderBranches} from './helpers';
 
 /* eslint camelcase: 0 */
@@ -21,7 +22,7 @@ const AUTH_ACCESS_CODE_A = 401;
 const AUTH_ACCESS_CODE_B = 403;
 
 
-const throwFromCode = (code)=> {
+const throwFromCode = (code, message)=> {
   if (code === REPO_EXISTS_CODE) {
     throw applifyError(
       REPO_ALREADY_EXISTS.code,
@@ -37,7 +38,7 @@ const throwFromCode = (code)=> {
 
   throw applifyError(
     REPO_CREATE_ERROR.code,
-    `${REPO_CREATE_ERROR.message}: Cannot create repository`
+    `${REPO_CREATE_ERROR.message}: Cannot create repository ${code} ${message}`
   );
 };
 
@@ -56,6 +57,7 @@ const fetchInitGitRemote = async (store)=> await fetch(
   }),
   store.answers.gitAccessToken,
   null,
+  undefined,
   true
 );
 
@@ -77,8 +79,8 @@ const initialiseGitRemote = ()=> ({
       setGitUrlsInStore(storeCtx, response);
 
       return {printInfo, printSuccess};
-    } catch ({code}) {
-      throwFromCode(code);
+    } catch ({code, message}) {
+      throwFromCode(code, message);
     }
   }
 });

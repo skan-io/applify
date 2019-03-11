@@ -9,7 +9,7 @@ export default {
 
   build: 'run build:*',
   ['build:babel']: "./node_modules/@babel/cli/bin/babel.js src --out-dir build/pkg --ignore '**/*.test.js'",
-  ['build:files']: 'cp -R ./README.md ./LICENSE ./package.json ./src/templates build/pkg/',
+  ['build:files']: 'cp -R ./README.md ./LICENSE ./babel.config.js ./package.json ./src/templates build/pkg/',
 
   test: 'echo need test script',
 

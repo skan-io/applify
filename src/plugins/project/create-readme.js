@@ -1,9 +1,10 @@
 import fs from 'fs';
 import isUrl from 'isurl';
+import {parseArrayString} from '../utils';
 
 /* eslint max-len: 0 */
 
-// eslint-disable-next-line max-params
+// eslint-disable-next-line max-params, complexity
 const createReadmeHeader = (store)=> {
   const {
     faviconUrl, useRedux, useEslint, useAmplify, useStorybook,
@@ -12,7 +13,7 @@ const createReadmeHeader = (store)=> {
 
   let src = `./src/${faviconUrl}`;
 
-  if (isUrl(faviconUrl) || faviconUrl.startsWith('http')) {
+  if (faviconUrl && (isUrl(faviconUrl) || faviconUrl.startsWith('http'))) {
     src = faviconUrl;
   }
 
@@ -53,13 +54,13 @@ const createReadmeHeader = (store)=> {
 
 const createReadmeTableOfContents = (store)=> {
   const {
-    privatePackage, useMultiEnv, useEslint, useJest, useCommitizen
+    projectPrivate, useMultiEnv, useEslint, useJest, useCommitizen
   } = store.answers;
 
   return `
   ## Table of Contents
 
-  ${privatePackage ? '- [Security](#security)' : '\r'}
+  ${projectPrivate ? '- [Security](#security)' : '\r'}
   - [Background](#background)
   - [Install](#install)
   - [Usage](#usage)
@@ -122,7 +123,7 @@ const createGitSection = (store)=> `
 \`\`\`
 `;
 
-const createUsageSection = (store)=> `
+const createUsageSection = ({answers})=> `
 ## Usage
 
 To start the application in your development environment:
@@ -131,14 +132,14 @@ To start the application in your development environment:
 npx run
 \`\`\`
 
->This will run ${store.answers.useStorybook ? 'both ' : ''}\`webpack\`${store.answers.useStorybook ? ' and `storybook` servers' : ''}.
->Application can be viewed on \`localhost:${store.answers.devServerPort}\`
-${store.answers.useStorybook ? `>Storybook stories can be viewed at \`localhost:${store.answers.storybookServerPort}\`` : ''}
+>This will run ${answers.useStorybook ? 'both ' : ''}\`webpack\`${answers.useStorybook ? ' and `storybook` servers' : ''}.
+>Application can be viewed on \`localhost:${answers.devServerPort}\`
+${answers.useStorybook ? `>Storybook stories can be viewed at \`localhost:${answers.storybookServerPort}\`` : ''}
 
 This runs [webpack's dev server](https://webpack.js.org/configuration/dev-server/)
 with live reloading enabled. You can find it's configuration in [webpack.config.babel.js](./webpack.config.babel.js).
 
-Note: If you need to start a dev server supporting all production browsers (${store.answers.browserTargets.toString()})
+Note: If you need to start a dev server supporting all production browsers (${answers.browserTargets ? parseArrayString(answers.browserTargets).string : ''})
 please run \`npx run config --node-env=production\`.\n
 `;
 
@@ -270,14 +271,14 @@ const createConfigurationSection = ()=> `
 const createMaintainersSection = (store)=> `
 ## Maintainers
 
-${store.answers.repoMaintainers
-    .split(',')
+${parseArrayString(store.answers.repoMaintainers)
+    .array
     .map((maintainer)=> `[@${maintainer}](https://github.com/${maintainer}) \n`)
     .toString()
 }
 `;
 
-const createReadmeFooter = (store)=> `
+const createReadmeFooter = ({answers})=> `
 Small note: If editing the README, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
 
 ## Under the Hood
@@ -287,7 +288,7 @@ Small note: If editing the README, please conform to the [standard-readme](https
 Any use of this software by any person will incur no liability on the owner of this software.
 
 ## License
-[MIT](https://choosealicense.com/licenses/${store.answers.projectLicense.toLowerCase()}/)
+[MIT](https://choosealicense.com/licenses/${answers.projectLicense ? answers.projectLicense.toLowerCase() : ''}/)
 `;
 
 // eslint-disable-next-line max-statements, complexity
@@ -322,7 +323,7 @@ export const createReadmeTasks = async (store)=> {
     ]
   };
 
-  if (store.answers.privatePackage) {
+  if (store.answers.projectPrivate) {
     task.children.push({
       type: 'task',
       description: 'create readme security section',

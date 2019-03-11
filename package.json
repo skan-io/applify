@@ -26,8 +26,11 @@
   },
   "homepage": "https://github.com/skan-io/applify#readme",
   "dependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "@babel/register": "^7.0.0",
     "@rauschma/stringio": "1.4.0",
     "chalk": "2.4.2",
+    "check-node-version": "^3.2.0",
     "commander": "2.19.0",
     "figlet": "1.2.1",
     "inquirer": "6.2.1",
@@ -41,7 +44,7 @@
     "@skan-io/jest-config-base": "^1.0.0",
     "@skan-io/release-config": "^1.0.0",
     "@skan-io/remark-config": "^1.0.1",
-    "cz-conventional-changelog": "2.1.0",
+    "cz-conventional-changelog": "^2.1.0",
     "isurl": "4.0.0",
     "npx-run": "^2.1.2",
     "rimraf": "^2.6.3"

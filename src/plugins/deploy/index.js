@@ -45,6 +45,9 @@ export const run = async (store)=> {
         }
       }
 
+      await store.runTasks();
+      await store.runQuestions();
+
       resolve(null);
     });
   });

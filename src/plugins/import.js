@@ -1,69 +1,16 @@
-import {execute} from '../execute';
+import {relative, join} from 'path';
 import {applifyError} from '../error';
-import {PLUGIN_IMPORT_ERROR, PLUGINS_OUT_OF_SYNC} from '../error/error-codes';
-import {singleLine} from '../utils/strings';
+import {PLUGIN_IMPORT_ERROR} from '../error/codes';
 
 
-export const importPlugin = async (store, config, role)=> {
-  if (!store.importedPlugins) {
-    store.importedPlugins = [];
+export const importConfig = async (path, babel=false)=> {
+  const relativePath = relative(process.argv[1], path);
+
+  if (babel) {
+    const config = require(relativePath);
+    return config;
   }
 
-  const plugin = config[role];
-
-  if (store.importedPlugins) {
-    for (const importedPlugin of store.importedPlugins) {
-      if (
-        importedPlugin.role === role
-        && importedPlugin.plugin !== plugin
-      ) {
-        throw applifyError(
-          PLUGINS_OUT_OF_SYNC.code,
-          singleLine`${PLUGINS_OUT_OF_SYNC.message}:
-             ${' '}failed with '${role}: ${plugin}' (HINT: It seems your plugin config
-             ${' '}has changed since you last ran applify init and this will break plugin
-             ${' '}dependencies - try running with --reset option)`
-        );
-      }
-    }
-  }
-
-  if (plugin.startsWith('@skan-io/applify')) {
-    const [,, pkg] = plugin.split('/');
-
-    try {
-      const importedPkg = await import(`./${pkg}`);
-      if (!store.importedPlugins.some((pluginObj)=> pluginObj.role === role)) {
-        store.importedPlugins.push({role, plugin});
-      }
-      store[role] = importedPkg;
-      return importedPkg;
-    } catch (err) {
-      throw applifyError(
-        PLUGIN_IMPORT_ERROR.code,
-        `${PLUGIN_IMPORT_ERROR.message}: failed with ${err}`,
-        err.stack
-      );
-    }
-
-  // Naive implementation (maybe scope packages with @pkg/[pluginName])
-  // Then allow local plugins to also be imported (@local/[pluginName])
-  } else {
-    let importedPkg = null;
-
-    try {
-      importedPkg = await import(plugin);
-    } catch {
-      await execute({
-        cmd: `npm i -D ${plugin}`,
-        info: `Installing and importing ${plugin}`
-      });
-
-      importedPkg = await import(plugin);
-    }
-
-    store.importedPlugins.push({role, plugin});
-    store[role] = importedPkg;
-    return importedPkg;
-  }
+  const importedConfig = await import(relativePath);
+  return importedConfig;
 };

@@ -1,6 +1,6 @@
-import fs from 'fs';
-import EventEmitter from 'events';
 import {join} from 'path';
+import {writeFileSync} from 'fs';
+import EventEmitter from 'events';
 import {ADD_TASK, ADD_QUESTION} from './events';
 import {printDebugOutput} from './print';
 import {stringify} from './utils/strings';
@@ -15,6 +15,8 @@ class Store extends EventEmitter {
     this.questionsList = [];
     this.print = [];
     this.completedSteps = [];
+    this.importedPlugins = [];
+    this.answers = {};
   }
 
   set(operator, plugin) {
@@ -61,7 +63,7 @@ class Store extends EventEmitter {
     const applifyDir = join(process.cwd(), '.applify');
     const applifyTempFile = join(applifyDir, 'temp.json');
 
-    fs.writeFileSync(
+    writeFileSync(
       applifyTempFile,
       stringify({...this, preloaded: false})
     );

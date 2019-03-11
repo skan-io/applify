@@ -1,39 +1,49 @@
 import {gitAccessToken} from './private-config.js';
+import ApplifyProjectPlugin from './plugins/project';
+import {getNpmProfileName} from './plugins/project/helpers';
+import ApplifyPackagePlugin from './plugins/package';
 
 // Plugins config
-const config = ()=> ({
+const config = async ()=> ({
   // TODO eventually infer the step dependencies
   // TODO break into init and run steps
-  steps: [
-    'project',
-    'source',
-    'package',
-    'language',
-    'build',
-    'deploy',
-    'test',
-    'style',
-    // 'module',
-    // 'docs'
-  ],
+  // steps: [
+  //   'project',
+  //   // 'source',
+  //   // 'package',
+  //   // 'language',
+  //   // 'build',
+  //   // 'deploy',
+  //   // 'test',
+  //   // 'style',
+  //   // 'module',
+  //   // 'docs'
+  // ],
 
   branches: ['master', 'dev'],
   gitAccessToken,
 
   // Operators
-  preloader: '@skan-io/applify/preloader',
-  tasker: '@skan-io/applify/tasker',
-  prompter: '@skan-io/applify/prompter',
+  // preloader: '@skan-io/applify/preloader',
+  // tasker: '@skan-io/applify/tasker',
+  // prompter: '@skan-io/applify/prompter',
 
-  // Step managers
-  project: '@skan-io/applify/project-manager',
-  source: '@skan-io/applify/source-manager',
-  package: '@skan-io/applify/package-manager',
-  language: '@skan-io/applify/language-manager',
-  build: '@skan-io/applify/build-manager',
-  test: '@skan-io/applify/test-manager',
-  deploy: '@skan-io/applify/deploy-manager',
-  style: '@skan-io/applify/style-manager'
+  // Plugins order matters
+  plugins: [
+    // Using plugin.build will allow you to use asynchronous internal defaults
+    // Can also pass an async function to build to generate async options
+    // on the fly
+    await ApplifyProjectPlugin.build(),
+    new ApplifyPackagePlugin()
+  ]
+
+  // source: '@skan-io/applify/source',
+  // package: '@skan-io/applify/package',
+  // language: '@skan-io/applify/language',
+  // build: '@skan-io/applify/build',
+  // test: '@skan-io/applify/test',
+  // deploy: '@skan-io/applify/deploy',
+  // style: '@skan-io/applify/style'
 });
 
 export default config;

@@ -1,89 +1,15 @@
 import {join} from 'path';
+import {existsSync} from 'fs';
 import Store from './store';
+import ApplifyTaskRunnerPlugin from './plugins/tasker';
+import ApplifyPromptPlugin from './plugins/prompter';
+import {importConfig} from './plugins/import';
+import {removeDirectory, createDirectory} from './utils/fs';
+import {printNeedPlugins} from './print';
+import {applifyError} from './error';
+import {NO_PLUGIN_ERROR} from './error/codes';
 import defaultConfig from './default.config';
-import {importPlugin} from './plugins/import';
-import {
-  STORE_INIT,
-  STORE_OPERATOR_SETUP,
-  STORE_MANAGER_SETUP,
-  STORE_PRELOADED,
-  STORE_RUN
-} from './events';
-import {printInfo} from './print';
-import {resetTempFiles} from './reset';
 
-
-// Set up the operators
-// Operators are the core functionality of applify
-const setupStoreOperatorPlugins = async (store, config)=> {
-  const operators = ['preloader', 'tasker', 'prompter'];
-
-  store.step = 'setup-operators';
-
-  // Initialise the operator plugins
-  for (const operator of operators) {
-    const operatorPlugin = await importPlugin(store, config, operator);
-    // Assign the operator in the store
-    store.set(operator, operatorPlugin);
-  }
-
-  store.emit(STORE_OPERATOR_SETUP);
-};
-
-// Set up managers
-// Manager are the pluggable/customisable functionality of applify
-const setupStoreManagerPlugins = async (store, config)=> {
-  store.step = 'setup-managers';
-
-  for (const step of config.steps) {
-    await importPlugin(store, config, step);
-  }
-
-  store.emit(STORE_MANAGER_SETUP);
-};
-
-const preloadStore = async (store)=> {
-  store.step = 'preload';
-
-  // Do initial check for temp files and config files etc..
-  await store.preloader.init(store);
-
-  store.emit(STORE_PRELOADED);
-};
-
-const initialiseStorePlugins = async (store, config)=> {
-  store.step = 'init';
-
-  // Initialise the manager plugins (manager for each step)
-  for (const step of config.steps) {
-    // Initialise plugin
-    await store[step].init(store, config);
-    store.updateTempStore();
-  }
-
-  store.emit(STORE_INIT);
-
-  // First data driven step, all steps from here on are reported
-  // as `completeSteps`, which are stored in .applify/temp.json
-  store.completedSteps.push('init');
-};
-
-const getSteps = (store, steps)=> {
-  for (const step of store.completedSteps) {
-    // We don't care about intermediary steps
-    // e.g. init:project or init:source
-    if (step.includes(':')) {
-      // eslint-disable-next-line
-      continue;
-    } else if (step === steps[0]) {
-      steps = steps.slice(1);
-    } else {
-      break;
-    }
-  }
-
-  return steps;
-};
 
 // eslint-disable-next-line
 const setFilePaths = (store)=> {
@@ -110,107 +36,109 @@ const setFilePaths = (store)=> {
   }
 };
 
-// Initialise all the plugins required by operators and steps
-// eslint-disable-next-line
-const init = async ({devMode, reset, useConfig}, customStore, customConfig)=> {
-  // Can pass a custom store class/object in also
-  const store = customStore ? customStore : new Store();
-  store.answers = {};
-
-  setFilePaths(store);
-
-  // Get config
-  // TODO get config from elsewhere
-  const config = customConfig
-    // Use parts from the default config if not found in customConfig
-    ? {...defaultConfig(), ...customConfig}
-    : defaultConfig();
-
-  // Setup the store operators
-  await setupStoreOperatorPlugins(store, config);
-
-  // Default set of steps
-  let steps = ['init', ...config.steps];
-
-  // COMPULSORY STEPS...
-
-  // If reset clear the .applify/temp.json
+const createApplifyDirectory = async (store, reset)=> {
   if (reset) {
-    await resetTempFiles(store);
-  } else {
-    // Try to load the saved state from the last applify attempt
-    await preloadStore(store);
+    removeDirectory(store.applifyDir);
   }
 
-  await setupStoreManagerPlugins(store, config);
+  createDirectory(store.applifyDir);
+};
 
-  // NON-COMPULSORY STEPS...
+const getApplifyConfigPath = (workingDir)=> {
+  const configPath = join(workingDir, 'applify.config.js');
 
-  // If it was preloaded find out what step we are up to
-  if (store.preloaded) {
-    steps = getSteps(store, steps);
+  if (existsSync(configPath)) {
+    return {path: configPath, babel: false};
   }
 
-  // Here any init tasks that want to delay some tasks can react
-  // to the store 'init' event and then run some tasks
+  const configBabelPath = join(workingDir, 'applify.config.babel.js');
 
-  // If we still need to initialise the store
-  if (steps[0] === 'init') {
-    await initialiseStorePlugins(store, config, false);
-    // Get the left over steps
-    steps = steps.slice(1);
-    store.updateTempStore();
+  if (existsSync(configBabelPath)) {
+    return {path: configBabelPath, babel: true};
   }
 
-  // Check that for each already completed (restored) plugin that the required
-  // init data is there, otherwise re-run the init functionality
-  if (store.preloaded) {
-    for (const step of steps) {
-      if (step !== 'init') {
-        await store[step].checkRestore(store, config);
-      }
+  return null;
+};
+
+const findConfig = async (workingDir)=> {
+  const configPath = getApplifyConfigPath(workingDir);
+
+  if (configPath) {
+    const {path, babel} = configPath;
+    const config = await importConfig(path, babel);
+
+    if (typeof config.default === 'function') {
+      return await config.default();
     }
+
+    return config.default;
   }
 
-  printInfo('\n-------- PROJECT SETUP ---------\n');
+  return defaultConfig();
+};
 
-  const runPromises = [];
+const checkConfig = (config)=> {
+  const {plugins} = config;
 
-  const sourcePromiseFunc = await store['source'].run(store);
-  const projectPromiseFunc = await store['project'].run(store);
-  const packagePromiseFunc = await store['package'].run(store);
-  const languagePromiseFunc = await store['language'].run(store);
-  const buildPromiseFunc = await store['build'].run(store);
-  const testPromiseFunc = await store['test'].run(store);
-  const stylePromiseFunc = await store['style'].run(store);
-  const deployPromiseFunc = await store['deploy'].run(store);
+  if (!plugins || !Array.isArray(plugins) || plugins.length === 0) {
+    printNeedPlugins();
+    throw applifyError(
+      NO_PLUGIN_ERROR.code,
+      `${NO_PLUGIN_ERROR.message}: plugins must be defined array in config`
+    );
+  }
+};
 
-  runPromises.push(
-    projectPromiseFunc(),
-    sourcePromiseFunc(),
-    packagePromiseFunc(),
-    languagePromiseFunc(),
-    buildPromiseFunc(),
-    testPromiseFunc(),
-    stylePromiseFunc(),
-    deployPromiseFunc()
-  );
+const setStoreOperators = (store, config)=> {
+  const {taskRunner, prompt} = config;
+
+  store.tasker = taskRunner === undefined
+    ? new ApplifyTaskRunnerPlugin()
+    : taskRunner;
+
+  store.prompter = prompt === undefined
+    ? new ApplifyPromptPlugin()
+    : prompt;
+};
+
+const executePluginStage = async (store, config, stage)=> {
+  const postStagePromises = [];
+
+  for (const plugin of config.plugins) {
+    const stagePromise = await plugin[stage](store, config);
+    postStagePromises.push(stagePromise());
+  }
 
   await store.runTasks();
 
-  store.emit(STORE_RUN);
+  store.emit(`${stage}-complete`);
 
-  await Promise.all(runPromises);
+  await store.runTasks();
 
-  // Run each step
-  // for (const step of steps) {
-  //   // If the run phase was not complete run it again
-  //   if (!store.completeSteps.some(
-  //     (completed)=> completed === `run:${step}`)
-  //   ) {
-  //     await store[step].run(store, config);
-  //   }
-  // }
+  return Promise.all(postStagePromises);
 };
 
-export default init;
+const executePlugins = async (store, config, reset)=> {
+  if (!reset) {
+    await executePluginStage(store, config, 'patch');
+  }
+
+  await executePluginStage(store, config, 'check');
+  await executePluginStage(store, config, 'init');
+  await executePluginStage(store, config, 'run');
+  await executePluginStage(store, config, 'finish');
+};
+
+export default async (reset)=> {
+  const store = new Store();
+
+  setFilePaths(store);
+
+  const config = await findConfig(store.workingDir);
+  checkConfig(config);
+
+  setStoreOperators(store, config);
+
+  await createApplifyDirectory(store, reset);
+  await executePlugins(store, config, reset);
+};

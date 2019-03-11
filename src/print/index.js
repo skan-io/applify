@@ -97,3 +97,11 @@ export const printDebugOutput = (outputs)=> {
     console.log(chalk.blue('\n===============================\n'));
   }
 };
+
+export const printNeedPlugins = ()=> {
+  printWarning(`-------------------------------
+
+   PLUGINS MUST BE DEFINED!
+
+-------------------------------`);
+};

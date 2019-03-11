@@ -1,7 +1,7 @@
 import {join} from 'path';
 import {writeFileSync} from 'fs';
 import {execute} from '../../execute';
-import {createDirectory, addResourceFromTemplate} from '../utils';
+import {createDirectory, addResourceFromTemplate} from '../../utils/fs';
 import {createPackageJson} from './create-package-json.js';
 import {createConfigScript, createRunScript} from './create-scripts';
 

@@ -9,52 +9,51 @@ import {START_QUESTION, END_QUESTION} from '../events';
   `runQuestions` function.
  */
 
-// Standard build questions function used by the store, except we dont need
-// to do anything because we use the `createQuestion` helper across our
-// default plugins
-// eslint-disable-next-line
-export const buildQuestions = (questions, store)=> questions;
-
-
-// Standard prompt questions function used by the store
-export const runQuestions = async (questions, store)=> {
-  for (const question of questions) {
-    let answer = null;
-    store.emit(START_QUESTION, question);
-
-
-    if (typeof question === 'function') {
-      // Runtime question parameters
-      answer = await prompt(await question(store));
-    } else {
-      answer = await prompt(question);
-    }
-
-    // Update the store with new answers
-    store.answers = store.answers ? {...store.answers, ...answer} : answer;
-    store.emit(END_QUESTION, question);
+export default class ApplifyPromptPlugin {
+  buildQuestions(questions /* , store */) {
+    return questions;
   }
-};
 
-// THIS IS A NON-STANDARD FUNCTION AND IS NOT GARUANTEED TO BE USEFUL
-// TO PLUGIN BUILDERS
-// eslint-disable-next-line max-params
-export const createQuestion =
-  // eslint-disable-next-line
-  (question, type, value, defaultValue, choices=[], validate=()=>true)=> ({
-    message: question,
-    type,
-    default: defaultValue,
-    name: value,
-    choices,
-    validate
-  });
+  async runQuestions(questions, store) {
+    for (const question of questions) {
+      let answer = null;
+      store.emit(START_QUESTION, question);
 
-// Similar to above but allows for creating of question variables at runtime
-export const createRuntimeQuestion =
-  // eslint-disable-next-line
-  (question, type, value, defaultValue, choices=()=>[], validate=()=>true)=>
-    async (store)=> ({
+      // Provides a 'runtimeQuestion' functionality where question
+      // parameters can be evaluated at runtime as opposed to
+      // needing to be hard coded
+      if (typeof question === 'function') {
+        answer = await prompt(await question(store));
+      } else {
+        answer = await prompt(question);
+      }
+
+      // Update the store with new answers
+      store.answers = store.answers ? {...store.answers, ...answer} : answer;
+      store.emit(END_QUESTION, question);
+    }
+  }
+
+  // eslint-disable-next-line max-params
+  createQuestion(
+      question, type, value, defaultValue, choices=[], validate=()=> true
+  ) {
+    return {
+      message: question,
+      type,
+      default: defaultValue,
+      name: value,
+      choices,
+      validate
+    };
+  }
+
+  // eslint-disable-next-line max-params
+  createRuntimeQuestion(
+      question, type, value, defaultValue,
+      choices=()=> [], validate=()=> ()=> true
+  ) {
+    return async (store)=> ({
       message: await question(store),
       type: await type(store),
       default: await defaultValue(store),
@@ -62,3 +61,5 @@ export const createRuntimeQuestion =
       choices: await choices(store),
       validate: await validate(store)
     });
+  }
+}

@@ -1,7 +1,7 @@
 import {exec, spawn as shellSpawn} from 'child_process';
 import {onExit} from '@rauschma/stringio';
 import {printInfo, printSuccess, printError} from '../print';
-import {EXECUTION_ERROR} from '../error/error-codes';
+import {EXECUTION_ERROR} from '../error/codes';
 import {applifyError} from '../error';
 
 

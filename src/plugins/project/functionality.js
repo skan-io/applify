@@ -1,4 +1,4 @@
-import {createDirectory} from '../utils';
+import {createDirectory} from '../../utils/fs';
 import {createReadmeTasks} from './create-readme';
 
 

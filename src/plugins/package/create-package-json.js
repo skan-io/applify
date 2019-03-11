@@ -1,8 +1,6 @@
-import {stringify} from '../utils';
+import {stringify} from '../../utils/strings';
 import {getScopedProject} from './helpers';
-
-
-const NODE_VERSION_MIN = '10';
+import {NODE_VERSION_MIN} from './checks';
 
 
 // eslint-disable-next-line max-statements
@@ -11,7 +9,7 @@ export const createPackageJson = (store)=> {
   json.name = getScopedProject(
     store.answers.orgScope, store.answers.projectName
   );
-  json.private = store.answers.privatePackage;
+  json.private = store.answers.projectPrivate;
   json.version = store.answers.useCommitizen
     ? '0.0.0-semantically-released'
     : '1.0.0';
@@ -29,7 +27,7 @@ export const createPackageJson = (store)=> {
   json.bugs = store.answers.useGit
     ? `${store.gitHtmlUrl}/issues`
     : undefined;
-  json.publishConfig = store.answers.privatePackage
+  json.publishConfig = store.answers.projectPrivate
     ? undefined
     : {access: 'public'};
 
