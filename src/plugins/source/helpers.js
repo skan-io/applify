@@ -1,11 +1,8 @@
 import {execute} from '../../execute';
 
-export const getLocalGitProfile = async (store)=> {
-  try {
-    if (store.answers.repoOwner) {
-      return store.answers.repoOwner;
-    }
 
+export const getLocalGitProfile = async ()=> {
+  try {
     const {result} = await execute({
       cmd: 'git config user.name',
       info: 'Get git profile name'
@@ -16,6 +13,7 @@ export const getLocalGitProfile = async (store)=> {
     return 'none';
   }
 };
+
 
 export const parseAndReorderBranches = (branches)=> {
   if (!branches.some((branch)=> branch === 'master')) {

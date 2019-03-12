@@ -1,6 +1,7 @@
 import {join} from 'path';
 import {readFileSync, writeFileSync} from 'fs';
 import {fetch} from '../../fetch';
+import {HTTP_NOT_FOUND} from '../../fetch/http-codes';
 import {execute, spawn} from '../../execute';
 import {applifyError} from '../../error';
 import {
@@ -43,14 +44,14 @@ const throwFromCode = (code, message)=> {
 };
 
 const fetchInitGitRemote = async (store)=> await fetch(
-  store.answers.repoOrg
+  store.answers.repoOrg && store.answers.repoOrg !== 'none'
     ? `https://api.github.com/orgs/${store.answers.repoOrg}/repos`
     : 'https://api.github.com/user/repos',
   'POST',
   JSON.stringify({
     name: store.answers.projectName,
     description: store.answers.projectDescription,
-    private: store.answers.privatePackage,
+    private: store.answers.projectPrivate,
     license_template: store.answers.projectLicense,
     auto_init: true,
     gitignore_template: 'Node'
@@ -205,7 +206,8 @@ const runCommit = async (store, task, branch)=> {
           {
             cmd: 'git commit -m "Project setup and initial files"',
             info: `Git commit ${branch}`
-          }
+          },
+          false
         );
 
         return output;
@@ -251,25 +253,33 @@ const getLockdownUrl = (org, owner, name)=> {
 // eslint-disable-next-line max-params
 const fetchGitLockdown = async (
   url, statusChecks, dismissalRestrictions, codeReviews, restrictions, token
-)=> await fetch(
-  url,
-  'PUT',
-  JSON.stringify({
-    required_status_checks: statusChecks,
-    enforce_admins: true,
-    required_pull_request_reviews: {
-      dismissal_restrictions: dismissalRestrictions,
-      dismiss_stale_reviews: true,
-      require_code_owner_reviews: codeReviews,
-      required_approving_review_count: codeReviews ? 1 : 0
-    },
-    restrictions
-  }),
-  token,
-  'application/json',
-  'application/vnd.github.luke-cage-preview+json',
-  true
-);
+)=> {
+  let status = HTTP_NOT_FOUND;
+
+  while (status === HTTP_NOT_FOUND) {
+    status = await fetch(
+      url,
+      'PUT',
+      JSON.stringify({
+        required_status_checks: statusChecks,
+        enforce_admins: true,
+        required_pull_request_reviews: {
+          dismissal_restrictions: dismissalRestrictions,
+          dismiss_stale_reviews: true,
+          require_code_owner_reviews: codeReviews,
+          required_approving_review_count: codeReviews ? 1 : 0
+        },
+        restrictions
+      }),
+      token,
+      'application/json',
+      'application/vnd.github.luke-cage-preview+json',
+      false
+    );
+  }
+
+  return status;
+};
 
 
 export const initialiseGit = async (store)=> {
@@ -358,6 +368,7 @@ export const setupCommitizen = async (store)=> {
 
 export const checkoutAndPush = async (store)=> {
   const initialBranches = store.answers.initialBranches;
+
   const branches = parseAndReorderBranches(
     Array.isArray(initialBranches)
       ? initialBranches
@@ -386,8 +397,7 @@ export const lockDownMasterBranch = async (store)=> {
             projectName,
             useCi,
             ciPlatform,
-            repoMaintainers,
-            privatePackage
+            repoMaintainers
           } = storeCtx.answers;
 
           const url = getLockdownUrl(repoOrg, repoOwner, projectName);
@@ -395,7 +405,7 @@ export const lockDownMasterBranch = async (store)=> {
             `continuous-integration/${ciPlatform}/pr`,
             `continuous-integration/${ciPlatform}/push`
           ];
-          const statusChecks = useCi && !privatePackage
+          const statusChecks = useCi
             ? {strict: true, contexts}
             : undefined;
           const dismissalRestrictions = (

@@ -17,3 +17,5 @@ export const REPO_AUTH_ERROR = {code: 6, message: 'REPO AUTH ERROR'};
 export const REPO_CREATE_ERROR = {code: 7, message: 'CANNOT CREATE REPO'};
 
 export const GIT_INIT_ERROR = {code: 8, message: 'GIT INIT ERROR'};
+
+export const EXECUTION_ERROR = {code: 9, message: 'EXECUTION ERROR'};

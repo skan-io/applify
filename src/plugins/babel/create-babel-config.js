@@ -10,7 +10,7 @@ module.exports = {
     '${store.answers.nodeTarget}', // Node version to target
     [${parseArrayString(store.answers.browserTargets).array.map((target)=> `'${target}'`).toString()}], // Browser targets
     ['last 1 Chrome versions'], // Development browser targets
-    [${parseArrayString(store.answers.babelPlugins).string}] // Extra babel plugins
+    [${parseArrayString(store.answers.babelPlugins).array.map((plugin)=> `'${plugin}'`).toString()}] // Extra babel plugins
   )
 };
 `;

@@ -59,7 +59,7 @@ export const projectAuthor = async (store, defaultAnswer)=> {
         undefined, // choices
         (input)=> {
           if (!input || input === '') {
-            return 'Please give a valid author name';
+            return 'Please enter a valid author name';
           }
           return true;
         }

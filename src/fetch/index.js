@@ -34,10 +34,14 @@ export const fetch = async (
       };
     }
 
-    throw createResponseError(
-      `${method} to ${url} responded with ${response.status}`,
-      response.status
-    );
+    if (throwOnError) {
+      throw createResponseError(
+        `${method} to ${url} responded with ${response.status}`,
+        response.status
+      );
+    }
+
+    return response.status;
 
   } catch ({message, code}) {
     if (throwOnError) {

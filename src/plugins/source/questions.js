@@ -1,24 +1,32 @@
-import {getLocalGitProfile} from './helpers';
+import {printAnswer} from '../utils';
 
 
 export const useGit = async (store)=> {
-  store.addQuestion(
-    store.prompter.createQuestion(
-      'Would you like to use github: ',
-      'confirm',
-      'useGit',
-      true
-    )
-  );
+  const question = 'Use github: ';
 
-  await store.runQuestions();
+  if (store.answers.useGit === undefined) {
+    store.addQuestion(
+      store.prompter.createQuestion(
+        question,
+        'confirm',
+        'useGit',
+        true
+      )
+    );
+
+    await store.runQuestions();
+  } else {
+    printAnswer(question, store.answers.useGit);
+  }
 };
 
 export const useCommitizen = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Use commitizen: ';
+
+  if (store.answers.useGit && store.answers.useCommitizen === undefined) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Would you like to use commitizen: ',
+        question,
         'confirm',
         'useCommitizen',
         true
@@ -26,44 +34,61 @@ export const useCommitizen = async (store)=> {
     );
 
     await store.runQuestions();
+  } else if (store.answers.useCommitizen !== undefined) {
+    printAnswer(question, store.answers.useCommitizen);
   }
 };
 
-export const repoOwner = async (store)=> {
-  const owner = await getLocalGitProfile(store);
+export const repoOwner = async (store, defaultAnswer)=> {
+  const question = 'Git username: ';
 
-  if (store.answers.useGit) {
+  if (store.answers.useGit && !store.answers.repoOwner) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Git username: ',
+        question,
         'input',
         'repoOwner',
-        store.answers.repoOwner || owner
+        store.answers.repoOwner || defaultAnswer,
+        undefined,
+        (input)=> { // validate
+          if (!input || input === '') {
+            return 'Please enter a valid git username';
+          }
+          return true;
+        }
       )
     );
 
     await store.runQuestions();
+  } else if (store.answers.repoOwner) {
+    printAnswer(question, store.answers.repoOwner);
   }
 };
 
 export const repoOrg = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Git organisation: ';
+
+  if (store.answers.useGit && !store.answers.repoOrg) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Git organisation: ',
+        question,
         'input',
         'repoOrg',
-        store.answers.repoOrg || undefined
+        store.answers.repoOrg || 'none'
       )
     );
+  } else if (store.answers.repoOrg) {
+    printAnswer(question, store.answers.repoOrg);
   }
 };
 
 export const repoMaintainers = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Maintainers (comma separated): ';
+
+  if (store.answers.useGit && !store.answers.repoMaintainers) {
     store.addQuestion(
       store.prompter.createRuntimeQuestion(
-        ()=> 'Who are the project maintainers (comma seperated): ',
+        ()=> question,
         ()=> 'input',
         ()=> 'repoMaintainers',
         ()=> store.answers.repoMaintainers || store.answers.repoOwner
@@ -71,14 +96,18 @@ export const repoMaintainers = async (store)=> {
     );
 
     await store.runQuestions();
+  } else if (store.answers.repoMaintainers) {
+    printAnswer(question, store.answers.repoMaintainers);
   }
 };
 
 export const initialBranches = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Branches to initialise (comma seperated): ';
+
+  if (store.answers.useGit && !store.answers.initialBranches) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Branches to initialise (comma seperated): ',
+        question,
         'input',
         'initialBranches',
         store.answers.initialBranches || 'master, dev'
@@ -86,14 +115,18 @@ export const initialBranches = async (store)=> {
     );
 
     await store.runQuestions();
+  } else if (store.answers.initialBranches) {
+    printAnswer(question, store.answers.initialBranches);
   }
 };
 
 export const lockMasterBranch = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Restrict master branch: ';
+
+  if (store.answers.useGit && store.answers.lockMasterBranch === undefined) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Would you like lock down master: ',
+        question,
         'confirm',
         'lockMasterBranch',
         store.answers.lockMasterBranch || true
@@ -101,14 +134,17 @@ export const lockMasterBranch = async (store)=> {
     );
 
     await store.runQuestions();
+  } else if (store.answers.lockMasterBranch !== undefined) {
+    printAnswer(question, store.answers.lockMasterBranch);
   }
 };
 
 export const gitAccessToken = async (store)=> {
-  if (store.answers.useGit) {
+  const question = 'Git access token: ';
+  if (store.answers.useGit && !store.answers.gitAccessToken) {
     store.addQuestion(
       store.prompter.createQuestion(
-        'Git access token: ',
+        question,
         'input',
         'gitAccessToken',
         store.answers.gitAccessToken,
@@ -124,5 +160,7 @@ export const gitAccessToken = async (store)=> {
     );
 
     await store.runQuestions();
+  } else if (store.answers.gitAccessToken) {
+    printAnswer(question, store.answers.gitAccessToken);
   }
 };

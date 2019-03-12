@@ -82,9 +82,7 @@ Unauthorised access to this repository, any of its contents is prohibited.
 Permission must be explicitly given from a maintainer.
 
 Do not copy or share this repository, its url, or any of its downloadable
-content unless specified by the license.
-
-Please refer to the [LICENSE](./LICENSE)\n
+content unless specified by the owner/org/company policy.
 `;
 
 const createInstallSection = ()=> `
@@ -139,7 +137,7 @@ ${answers.useStorybook ? `>Storybook stories can be viewed at \`localhost:${answ
 This runs [webpack's dev server](https://webpack.js.org/configuration/dev-server/)
 with live reloading enabled. You can find it's configuration in [webpack.config.babel.js](./webpack.config.babel.js).
 
-Note: If you need to start a dev server supporting all production browsers (${answers.browserTargets ? parseArrayString(answers.browserTargets).string : ''})
+Note: If you need to start a dev server supporting all production browsers (${answers.browserTargets ? parseArrayString(answers.browserTargets).array.map((target)=> `${target}`).toString() : ''})
 please run \`npx run config --node-env=production\`.\n
 `;
 
@@ -278,18 +276,21 @@ ${parseArrayString(store.answers.repoMaintainers)
 }
 `;
 
-const createReadmeFooter = ({answers})=> `
+const createReadmeFooter = ()=> `
 Small note: If editing the README, please conform to the [standard-readme](https://github.com/RichardLitt/standard-readme) specification.
 
 ## Under the Hood
 
 ## Disclaimer
 
-Any use of this software by any person will incur no liability on the owner of this software.
-
-## License
-[MIT](https://choosealicense.com/licenses/${answers.projectLicense ? answers.projectLicense.toLowerCase() : ''}/)
+Any use of this software by any person will incur no liability on the owner of this software.\n
 `;
+
+const createReadmeLicense = ({answers})=> `
+## License
+[${answers.projectLicense.toUpperCase()}](https://choosealicense.com/licenses/${answers.projectLicense.toLowerCase()}/)
+`;
+
 
 // eslint-disable-next-line max-statements, complexity
 export const createReadmeTasks = async (store)=> {
@@ -497,13 +498,27 @@ export const createReadmeTasks = async (store)=> {
     type: 'task',
     description: 'create readme footer section',
     task: (storeCtx)=> {
-      storeCtx.readme += createReadmeFooter(storeCtx);
+      storeCtx.readme += createReadmeFooter();
 
       return {
         printInfo: 'Created readme footer section'
       };
     }
   });
+
+  if (store.answers.projectLicense) {
+    task.children.push({
+      type: 'task',
+      description: 'create readme license section',
+      task: (storeCtx)=> {
+        storeCtx.readme += createReadmeLicense(storeCtx);
+
+        return {
+          printInfo: 'Created readme license section'
+        };
+      }
+    });
+  }
 
   store.addTask(task);
   store.addTask({

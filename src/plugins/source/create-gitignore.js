@@ -17,6 +17,8 @@ build
 
 # Applify local temp and setup files
 .applify
+applify.config.js
+applify.config.babel.js
 
 # Test config
 src/private-config.js

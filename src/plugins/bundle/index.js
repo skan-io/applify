@@ -1,23 +1,47 @@
+import ApplifyPlugin from '..';
 import {STEP_COMPLETE} from '../../events';
-import {getBuildDetails} from './details';
 import {installWebpack, createWebpackConfig} from './functionality';
+import {property} from '../../utils/obj';
+import * as questions from './questions';
 
 
-export const init = async (store)=> {
-  await getBuildDetails(store);
+/*
+  ApplifyBundlePlugin will configure webpack and the webpack dev server
+ */
+export default class ApplifyBundlePlugin extends ApplifyPlugin {
+  static async build(opts={}) {
+    return new ApplifyBundlePlugin(opts);
+  }
 
-  store.emit(STEP_COMPLETE, 'init:build');
-  store.completedSteps.push('init:build');
+  constructor(opts, defaults) {
+    super('bundle', questions);
 
-  return ()=> Promise.resolve(null);
-};
+    this.scope = [
+      {
+        detail: 'buildEntries',
+        value: property(opts, 'entries'),
+        default: property(defaults, 'entries')
+      },
+      {
+        detail: 'buildOutputPath',
+        value: property(opts, 'output'),
+        default: property(defaults, 'output')
+      },
+      {
+        detail: 'devServerPort',
+        value: property(opts, 'port'),
+        default: property(defaults, 'port')
+      }
+    ];
+  }
+  
+  async run(store) {
+    await installWebpack(store);
+    await createWebpackConfig(store);
 
-export const run = async (store)=> {
-  await installWebpack(store);
-  await createWebpackConfig(store);
+    store.emit(STEP_COMPLETE, 'run:bundle');
+    store.completedSteps.push('run:bundle');
 
-  store.emit(STEP_COMPLETE, 'run:build');
-  store.completedSteps.push('run:build');
-
-  return ()=> Promise.resolve(null);
-};
+    return ()=> Promise.resolve(null);
+  }
+}

@@ -14,8 +14,8 @@ const getTravisAccessToken = async (store)=> {
         type: 'task',
         description: 'Exchange git token for travis token',
         task: async (storeCtx)=> {
-          const {privatePackage} = storeCtx.answers;
-          const endpoint = privatePackage ? 'travis-ci.com' : 'travis-ci.org';
+          const {projectPrivate} = storeCtx.answers;
+          const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
           const {
             response, printInfo: info, printSuccess
@@ -50,8 +50,8 @@ const getTravisAccessToken = async (store)=> {
 
 const checkForSynced = async (store)=> {
   let isSyncing = true;
-  const {privatePackage} = store.answers;
-  const endpoint = privatePackage ? 'travis-ci.com' : 'travis-ci.org';
+  const {projectPrivate} = store.answers;
+  const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
   while (isSyncing) {
     const {response} = await fetchWithHeaders(
@@ -79,10 +79,10 @@ const syncUserWithTravis = async (store)=> {
       {
         type: 'task',
         // eslint-disable-next-line max-len
-        description: `sync git user with ${store.answers.privatePackage ? 'travis-ci.com' : 'travis-ci.org'}`,
+        description: `sync git user with ${store.answers.projectPrivate ? 'travis-ci.com' : 'travis-ci.org'}`,
         task: async (storeCtx)=> {
-          const {privatePackage} = storeCtx.answers;
-          const endpoint = privatePackage ? 'travis-ci.com' : 'travis-ci.org';
+          const {projectPrivate} = storeCtx.answers;
+          const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
           const {printInfo: info, printSuccess} = await fetchWithHeaders(
             `https://api.${endpoint}/users/sync`,
@@ -120,8 +120,8 @@ const switchOnRepositoryInTravis = async (store)=> {
         task: async (storeCtx)=> {
           const {projectName, repoOwner, repoOrg} = storeCtx.answers;
           const owner = repoOrg ? repoOrg : repoOwner;
-          const {privatePackage} = storeCtx.answers;
-          const endpoint = privatePackage ? 'travis-ci.com' : 'travis-ci.org';
+          const {projectPrivate} = storeCtx.answers;
+          const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
           const {
             response, printInfo: info, printSuccess
@@ -150,8 +150,8 @@ const switchOnRepositoryInTravis = async (store)=> {
         type: 'task',
         description: 'switch ci on for repo',
         task: async (storeCtx)=> {
-          const {privatePackage} = storeCtx.answers;
-          const endpoint = privatePackage ? 'travis-ci.com' : 'travis-ci.org';
+          const {projectPrivate} = storeCtx.answers;
+          const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
           const {printInfo: info, printSuccess} = await fetchWithHeaders(
             `https://api.${endpoint}/hooks`,
@@ -208,7 +208,7 @@ export const activateTravisApp = async (store)=> {
   );
 };
 
-export const creatCIConfig = async (store)=> {
+export const createCIConfig = async (store)=> {
   if (store.answers.ciPlatform === 'travis-ci') {
     store.addTask({
       type: 'batch',

@@ -2,7 +2,7 @@ import {printDim} from '../print';
 
 
 export const printAnswer = (question, answer)=> {
-  printDim(`${question}${answer}`, 'white');
+  printDim(`? ${question}${answer}`, 'white');
 };
 
 // eslint-disable-next-line max-statements

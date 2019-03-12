@@ -5,10 +5,16 @@ import ApplifyTaskRunnerPlugin from './plugins/tasker';
 import ApplifyPromptPlugin from './plugins/prompter';
 import {importConfig} from './plugins/import';
 import {removeDirectory, createDirectory} from './utils/fs';
-import {printNeedPlugins} from './print';
+import {printNeedPlugins, newLine} from './print';
 import {applifyError} from './error';
 import {NO_PLUGIN_ERROR} from './error/codes';
+import {progress} from './progress';
 import defaultConfig from './default.config';
+
+
+const NUM_INIT_TASKS = 5;
+
+const stepProgress = (step)=> progress.update(progress.current + step);
 
 
 // eslint-disable-next-line
@@ -34,6 +40,8 @@ const setFilePaths = (store)=> {
   if (!store.appSrcDir) {
     store.appSrcDir = join(process.cwd(), 'src');
   }
+
+  stepProgress(1);
 };
 
 const createApplifyDirectory = async (store, reset)=> {
@@ -48,15 +56,18 @@ const getApplifyConfigPath = (workingDir)=> {
   const configPath = join(workingDir, 'applify.config.js');
 
   if (existsSync(configPath)) {
+    stepProgress(1);
     return {path: configPath, babel: false};
   }
 
   const configBabelPath = join(workingDir, 'applify.config.babel.js');
 
   if (existsSync(configBabelPath)) {
+    stepProgress(1);
     return {path: configBabelPath, babel: true};
   }
 
+  stepProgress(1);
   return null;
 };
 
@@ -71,8 +82,12 @@ const findConfig = async (workingDir)=> {
       return await config.default();
     }
 
+    stepProgress(1);
+
     return config.default;
   }
+
+  stepProgress(1);
 
   return defaultConfig();
 };
@@ -87,6 +102,21 @@ const checkConfig = (config)=> {
       `${NO_PLUGIN_ERROR.message}: plugins must be defined array in config`
     );
   }
+
+  stepProgress(1);
+};
+
+const loadPlugins = async (config)=> {
+  progress.total += config.plugins.length;
+  const plugins = [];
+
+  for (const pluginPromise of config.plugins) {
+    plugins.push(await pluginPromise);
+    stepProgress(1);
+  }
+
+  config.plugins = plugins;
+  stepProgress(1);
 };
 
 const setStoreOperators = (store, config)=> {
@@ -99,6 +129,8 @@ const setStoreOperators = (store, config)=> {
   store.prompter = prompt === undefined
     ? new ApplifyPromptPlugin()
     : prompt;
+
+  stepProgress(1);
 };
 
 const executePluginStage = async (store, config, stage)=> {
@@ -129,16 +161,25 @@ const executePlugins = async (store, config, reset)=> {
   await executePluginStage(store, config, 'finish');
 };
 
+// eslint-disable-next-line
 export default async (reset)=> {
   const store = new Store();
+
+  newLine();
+
+  progress.init(NUM_INIT_TASKS);
 
   setFilePaths(store);
 
   const config = await findConfig(store.workingDir);
   checkConfig(config);
+  await loadPlugins(config);
 
   setStoreOperators(store, config);
 
   await createApplifyDirectory(store, reset);
+
+  newLine();
+
   await executePlugins(store, config, reset);
 };
