@@ -42,7 +42,7 @@ export const browserTargets = async (store, defaultAnswer)=> {
 };
 
 export const babelPlugins = async (store, defaultAnswer)=> {
-  const question = 'Extra babel plugins: ';
+  const question = 'Extra babel plugins (comma separated): ';
 
   if (store.answers.babelPlugins) {
     printAnswer(question, store.answers.babelPlugins);

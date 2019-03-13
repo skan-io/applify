@@ -1,6 +1,6 @@
 import {join} from 'path';
 import {readFileSync, writeFileSync} from 'fs';
-import {fetch} from '../../fetch';
+import {fetch, fetchWithHeaders} from '../../fetch';
 import {HTTP_NOT_FOUND} from '../../fetch/http-codes';
 import {execute} from '../../execute';
 import {applifyError} from '../../error';
@@ -228,40 +228,6 @@ const runCommit = async (store, task, branch)=> {
   });
 };
 
-const getLockdownUrl = (org, owner, name)=> {
-  const base = `https://api.github.com/repos`;
-  const repoName = (
-    org === undefined || org === '' || org === 'none'
-  )
-    ? owner
-    : org;
-
-  return `${base}/${repoName}/${name}/branches/master/protection`;
-};
-
-// eslint-disable-next-line max-params
-const fetchGitLockdown = async (
-  url, statusChecks, dismissalRestrictions, codeReviews, restrictions, token
-)=> await fetch(
-  url,
-  'PUT',
-  JSON.stringify({
-    required_status_checks: statusChecks,
-    enforce_admins: true,
-    required_pull_request_reviews: {
-      dismissal_restrictions: dismissalRestrictions,
-      dismiss_stale_reviews: true,
-      require_code_owner_reviews: codeReviews,
-      required_approving_review_count: codeReviews ? 1 : 0
-    },
-    restrictions
-  }),
-  token,
-  'application/json',
-  'application/vnd.github.luke-cage-preview+json',
-  true
-);
-
 
 export const initialiseGit = async (store)=> {
   store.addTask({
@@ -309,7 +275,9 @@ export const setupCommitizen = async (store)=> {
       }
     ]
   });
+};
 
+export const rewriteReleaseConfig = async (store)=> {
   if (store.answers.projectPrivate) {
     store.addTask({
       type: 'batch',
@@ -378,32 +346,56 @@ export const lockDownMasterBranch = async (store)=> {
             repoOrg,
             repoOwner,
             projectName,
+            projectPrivate,
             useCi,
-            ciPlatform,
-            repoMaintainers
+            // TODO ciPlatform
+            repoMaintainers,
+            gitAccessToken
           } = storeCtx.answers;
 
-          const url = getLockdownUrl(repoOrg, repoOwner, projectName);
-          const contexts = [
-            `continuous-integration/${ciPlatform}/pr`,
-            `continuous-integration/${ciPlatform}/push`
-          ];
+          const owner = repoOrg && repoOrg !== '' && repoOrg !== 'none'
+            ? repoOrg
+            : repoOwner;
+
+          const contexts = projectPrivate
+            ? [
+              `Travis CI - Branch`,
+              `Travis CI - Pull Request`
+            ]
+            : [
+              'continuous-integration/travis-ci/pr',
+              'continuous-integration/travis-ci/push'
+            ];
+
+          // private projects will use travis.com which is now
+          // a github app and doesnt require contexts
           const statusChecks = useCi
             ? {strict: true, contexts}
-            : undefined;
-          const dismissalRestrictions = (
-            repoOrg && repoOrg !== '' && repoOrg !== 'none'
-          ) ? {users: [repoOwner]}
-            : undefined;
-          const codeReviews = Boolean(
-            parseArrayString(repoMaintainers).array.length
-          );
-          const restrictions = repoOrg && repoOrg !== '' && repoOrg !== 'none'
-            ? {users: parseArrayString(repoMaintainers).array}
             : null;
 
-          return await fetchGitLockdown(
-            url, statusChecks, dismissalRestrictions, codeReviews, restrictions
+          const prReviews = parseArrayString(repoMaintainers).array.length > 1
+            ? {
+              dismiss_stale_reviews: true,
+              require_code_owner_reviews: false,
+              required_approving_review_count: 1
+            }
+            : null;
+
+          return await fetchWithHeaders(
+            `https://api.github.com/repos/${owner}/${projectName}/branches/master/protection`,
+            'PUT',
+            JSON.stringify({
+              required_status_checks: statusChecks,
+              enforce_admins: true,
+              required_pull_request_reviews: prReviews,
+              restrictions: null
+            }),
+            {
+              Accept: 'application/vnd.github.luke-cage-preview+json',
+              ['Content-Type']: 'application/json',
+              Authorization: `Bearer ${gitAccessToken}`
+            },
+            true
           );
         }
       }

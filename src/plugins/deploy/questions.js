@@ -2,7 +2,7 @@ import {printAnswer} from '../utils';
 
 
 export const ciPlatform = async (store, defaultAnswer)=> {
-  const question = 'Choose your CI platform: ';
+  const question = 'CI platform: ';
 
   if (store.answers.ciPlatform) {
     printAnswer(question, store.answers.ciPlatform);

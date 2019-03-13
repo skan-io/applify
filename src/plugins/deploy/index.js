@@ -1,5 +1,5 @@
 import ApplifyPlugin from '..';
-import {STEP_COMPLETE} from '../../events';
+import {STEP_COMPLETE, FINISH_COMPLETE} from '../../events';
 import {
   createCIConfig,
   hookupCI,
@@ -10,8 +10,7 @@ import * as questions from './questions';
 
 
 /*
-  ApplifyDeployPlugin will set up the ci pipeline and deployment environment
-  TODO: break ci into ApplifyIntegrationPlugin
+  ApplifyIntegrationPlugin will set up the ci pipeline
  */
 export default class ApplifyDeployPlugin extends ApplifyPlugin {
   static async build(opts={}) {
@@ -40,7 +39,7 @@ export default class ApplifyDeployPlugin extends ApplifyPlugin {
     ];
   }
 
-  patch(store) {
+  async patch(store) {
     for (const {detail, value} of this.scope) {
       const preDefined = store[detail];
       store.answers[detail] = preDefined === undefined ? value : preDefined;
@@ -55,16 +54,32 @@ export default class ApplifyDeployPlugin extends ApplifyPlugin {
     return ()=> Promise.resolve(null);
   }
 
+  async run(store) {
+    if (store.answers.ciPlatform === 'travis-ci') {
+      await createCIConfig(store);
+    }
+
+    store.emit(STEP_COMPLETE, 'run:deploy');
+    store.completedSteps.push('run:deploy');
+
+    return ()=> Promise.resolve(null);
+  }
+
   async finish(store) {
     if (store.answers.ciPlatform === 'travis-ci') {
       await hookupCI(store);
-      await createCIConfig(store);
-      await activateTravisApp(store);
     }
 
     store.emit(STEP_COMPLETE, 'finish:deploy');
     store.completedSteps.push('finish:deploy');
 
-    return ()=> Promise.resolve(null);
+    return ()=> new Promise((resolve)=> {
+      if (store.answers.ciPlatform === 'travis-ci') {
+        store.on(FINISH_COMPLETE, async ()=> {
+          await activateTravisApp(store);
+          resolve(null);
+        });
+      }
+    });
   }
 }

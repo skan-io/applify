@@ -2,12 +2,14 @@ import ApplifyPlugin from '..';
 import {
   STEP_COMPLETE,
   INIT_COMPLETE,
-  RUN_COMPLETE
+  RUN_COMPLETE,
+  FINISH_COMPLETE
 } from '../../events';
 import {
   initialiseGit,
   rewriteGitIgnore,
   setupCommitizen,
+  rewriteReleaseConfig,
   checkoutAndPush,
   lockDownMasterBranch
 } from './functionality';
@@ -87,7 +89,7 @@ export default class ApplifySourcePlugin extends ApplifyPlugin {
     return ()=> new Promise((resolve)=> {
       if (store.answers.useGit) {
         store.on(INIT_COMPLETE, async ()=> {
-          // await initialiseGit(store);
+          await initialiseGit(store);
           resolve(null);
         });
       }
@@ -110,16 +112,22 @@ export default class ApplifySourcePlugin extends ApplifyPlugin {
 
   async finish(store) {
     if (store.answers.useGit) {
-      // await checkoutAndPush(store);
-
-      if (store.answers.lockMasterBranch) {
-        await lockDownMasterBranch(store);
+      await checkoutAndPush(store);
+      if (store.answers.useCommitizen) {
+        await rewriteReleaseConfig(store);
       }
     }
 
     store.emit(STEP_COMPLETE, 'finish:source');
     store.completedSteps.push('finish:source');
 
-    return ()=> Promise.resolve(null);
+    return ()=> new Promise((resolve)=> {
+      if (store.answers.useGit && store.answers.lockMasterBranch) {
+        store.on(FINISH_COMPLETE, async ()=> {
+          await lockDownMasterBranch(store);
+          resolve(null);
+        });
+      }
+    });
   }
 }

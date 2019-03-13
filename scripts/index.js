@@ -11,7 +11,7 @@ export default {
   ['build:babel']: "./node_modules/@babel/cli/bin/babel.js src --out-dir build/pkg --ignore '**/*.test.js'",
   ['build:files']: 'cp -R ./README.md ./LICENSE ./babel.config.js ./package.json ./src/templates build/pkg/',
 
-  test: 'echo need test script',
+  test: 'echo "need test script"',
 
   cd: 'run clean build release',
   release: 'semantic-release',

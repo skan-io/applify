@@ -104,7 +104,7 @@ export default {
     ' --node-env=webpack-dev'
   ),
 
-  server: 'webpack-dev-server --progress',${answers.useStorybook ? `\n  storybook: 'run config:dev storybook:server',\n  'storybook:server': 'start-storybook -c storybook -p 6006',` : ''}${answers.useCi ? `\n\n  deploy: 'run deploy:app${answers.useCommitizen ? ' release\',' : '\','}` : ''}${answers.useCi ? '\n  [\'deploy:app\']: \'run config upload\',' : ''}${answers.useCommitizen && answers.useCi ? '\n  release: \'semantic-release pre && semantic-release post\',' : ''}
+  server: 'webpack-dev-server --progress',${answers.useStorybook ? `\n  storybook: 'run config:dev storybook:server',\n  'storybook:server': 'start-storybook -c storybook -p 6006',` : ''}${answers.useCi ? `\n\n  deploy: 'run deploy:app${answers.useCommitizen ? ' release\',' : '\','}` : ''}${answers.useCi ? '\n  [\'deploy:app\']: \'run config upload\',' : ''}${answers.useCommitizen && answers.useCi ? '\n  release: \'semantic-release\',' : ''}
 
   clean: 'rimraf ./build',
   build: 'webpack --display minimal --bail',${answers.useJest ? `\n\n  test: 'run lint jest:full',` : `\n\n  test: 'run lint',`}

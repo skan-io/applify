@@ -227,11 +227,14 @@ export const activateTravisApp = async (store)=> {
       {
         type: 'task',
         description: 'open travis for activation',
-        task: async ()=> {
-          await opn('https://travis-ci.com/account/repositories', {wait: false});
+        task: async (storeCtx)=> {
+          const endpoint = storeCtx.answers.projectPrivate
+            ? 'travis-ci.com' : 'travis-ci.org';
+
+          await opn(`https://${endpoint}/account/repositories`, {wait: false});
 
           return {
-            printInfo: 'Opened https://travis-ci.com/account/repositories for activation'
+            printInfo: `Opened https://${endpoint}/account/repositories for activation`
           };
         }
       }
