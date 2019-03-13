@@ -36,12 +36,15 @@ export const fetch = async (
 
     if (throwOnError) {
       throw createResponseError(
-        `${method} to ${url} responded with ${response.status}`,
+        `${method} to ${url} responded with ${response.status} (body: ${body})\n${response}`,
         response.status
       );
     }
 
-    return response.status;
+    return {
+      printWarning: response.status,
+      printError: response
+    };
 
   } catch ({message, code}) {
     if (throwOnError) {

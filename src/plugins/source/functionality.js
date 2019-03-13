@@ -2,7 +2,7 @@ import {join} from 'path';
 import {readFileSync, writeFileSync} from 'fs';
 import {fetch} from '../../fetch';
 import {HTTP_NOT_FOUND} from '../../fetch/http-codes';
-import {execute, spawn} from '../../execute';
+import {execute} from '../../execute';
 import {applifyError} from '../../error';
 import {
   REPO_ALREADY_EXISTS,
@@ -187,35 +187,24 @@ const getCheckoutAndAddTask = (branch)=> ({
 });
 
 const runCommit = async (store, task, branch)=> {
-  if (store.answers.useCommitizen) {
-    // TODO: can do better than git-cz
-    store.addTask(task);
-    await store.runTasks();
+  task.children.push({
+    type: 'task',
+    description: `commiting ${branch}`,
+    task: async ()=> {
+      const command = store.answers.useCommitizen
+        ? 'git commit -m "feat(project): Project setup and initial files"'
+        : 'git commit -m "Project setup and initial files"';
 
-    await spawn({
-      cmd: 'npx',
-      args: ['git-cz'],
-      info: `Commit ${branch} with commitizen standard`
-    }, false);
-  } else {
-    task.children.push({
-      type: 'task',
-      description: `commiting ${branch}`,
-      task: async ()=> {
-        const output = await execute(
-          {
-            cmd: 'git commit -m "Project setup and initial files"',
-            info: `Git commit ${branch}`
-          },
-          false
-        );
+      const output = await execute(
+        {cmd: command, info: `Git commit ${branch}`},
+        false
+      );
 
-        return output;
-      }
-    });
+      return output;
+    }
+  });
 
-    store.addTask(task);
-  }
+  store.addTask(task);
 
   store.addTask({
     type: 'batch',
@@ -253,33 +242,25 @@ const getLockdownUrl = (org, owner, name)=> {
 // eslint-disable-next-line max-params
 const fetchGitLockdown = async (
   url, statusChecks, dismissalRestrictions, codeReviews, restrictions, token
-)=> {
-  let status = HTTP_NOT_FOUND;
-
-  while (status === HTTP_NOT_FOUND) {
-    status = await fetch(
-      url,
-      'PUT',
-      JSON.stringify({
-        required_status_checks: statusChecks,
-        enforce_admins: true,
-        required_pull_request_reviews: {
-          dismissal_restrictions: dismissalRestrictions,
-          dismiss_stale_reviews: true,
-          require_code_owner_reviews: codeReviews,
-          required_approving_review_count: codeReviews ? 1 : 0
-        },
-        restrictions
-      }),
-      token,
-      'application/json',
-      'application/vnd.github.luke-cage-preview+json',
-      false
-    );
-  }
-
-  return status;
-};
+)=> await fetch(
+  url,
+  'PUT',
+  JSON.stringify({
+    required_status_checks: statusChecks,
+    enforce_admins: true,
+    required_pull_request_reviews: {
+      dismissal_restrictions: dismissalRestrictions,
+      dismiss_stale_reviews: true,
+      require_code_owner_reviews: codeReviews,
+      required_approving_review_count: codeReviews ? 1 : 0
+    },
+    restrictions
+  }),
+  token,
+  'application/json',
+  'application/vnd.github.luke-cage-preview+json',
+  true
+);
 
 
 export const initialiseGit = async (store)=> {
@@ -329,41 +310,43 @@ export const setupCommitizen = async (store)=> {
     ]
   });
 
-  store.addTask({
-    type: 'batch',
-    description: 'Rewrite .releaserc',
-    children: [
-      {
-        type: 'task',
-        description: 'rewrite .releaserc (no npm release)',
-        task: (storeCtx)=> {
-          const releaseFile = join(storeCtx.workingDir, '.releaserc');
-          const releaseJson = JSON.parse(readFileSync(releaseFile, 'utf8'));
+  if (store.answers.projectPrivate) {
+    store.addTask({
+      type: 'batch',
+      description: 'Rewrite .releaserc',
+      children: [
+        {
+          type: 'task',
+          description: 'rewrite .releaserc (no npm release)',
+          task: (storeCtx)=> {
+            const releaseFile = join(storeCtx.workingDir, '.releaserc');
+            const releaseJson = JSON.parse(readFileSync(releaseFile, 'utf8'));
 
-          releaseJson.plugins = [
-            '@semantic-release/commit-analyzer',
-            '@semantic-release/release-notes-generator',
-            [
-              '@semantic-release/npm',
-              {
-                npmPublish: false
-              }
-            ],
-            '@semantic-release/github'
-          ];
+            releaseJson.plugins = [
+              '@semantic-release/commit-analyzer',
+              '@semantic-release/release-notes-generator',
+              [
+                '@semantic-release/npm',
+                {
+                  npmPublish: false
+                }
+              ],
+              '@semantic-release/github'
+            ];
 
-          const releaseString = stringify(releaseJson);
+            const releaseString = stringify(releaseJson);
 
-          writeFileSync(releaseFile, releaseString);
+            writeFileSync(releaseFile, releaseString);
 
-          return {
-            printInfo: `Rewrote ${releaseFile}`,
-            printSuccess: releaseString
-          };
+            return {
+              printInfo: `Rewrote ${releaseFile}`,
+              printSuccess: releaseString
+            };
+          }
         }
-      }
-    ]
-  });
+      ]
+    });
+  }
 };
 
 export const checkoutAndPush = async (store)=> {

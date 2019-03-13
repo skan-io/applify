@@ -12,7 +12,7 @@ const getTravisAccessToken = async (store)=> {
     children: [
       {
         type: 'task',
-        description: 'Exchange git token for travis token',
+        description: 'exchange git token for travis token',
         task: async (storeCtx)=> {
           const {projectPrivate} = storeCtx.answers;
           const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
@@ -119,7 +119,9 @@ const switchOnRepositoryInTravis = async (store)=> {
         description: 'get travis repo id',
         task: async (storeCtx)=> {
           const {projectName, repoOwner, repoOrg} = storeCtx.answers;
-          const owner = repoOrg ? repoOrg : repoOwner;
+          const owner = repoOrg && repoOrg !== '' && repoOrg !== 'none'
+            ? repoOrg
+            : repoOwner;
           const {projectPrivate} = storeCtx.answers;
           const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
 
@@ -179,6 +181,44 @@ const switchOnRepositoryInTravis = async (store)=> {
   });
 };
 
+const addEnvironmentVariables = async (store)=> {
+  store.addTask({
+    type: 'batch',
+    description: 'Add GH_TOKEN to travis env',
+    children: [{
+      type: 'task',
+      description: 'add environment variables to travis',
+      task: async (storeCtx)=> {
+        const {
+          projectPrivate, travisAccessToken, gitAccessToken
+        } = storeCtx.answers;
+        const endpoint = projectPrivate ? 'travis-ci.com' : 'travis-ci.org';
+
+        return await fetchWithHeaders(
+          `https://api.${endpoint}/settings/env_vars?repository_id=${storeCtx.travisRepoId}`,
+          'POST',
+          JSON.stringify({
+            // eslint-disable-next-line
+            env_var: {
+              name: 'GH_TOKEN',
+              value: gitAccessToken,
+              public: false
+            }
+          }),
+          {
+            ['User-Agent']: 'MyClient/1.0.0',
+            Accept: 'application/vnd.travis-ci.2.1+json',
+            Host: `api.${endpoint}`,
+            Authorization: `token ${travisAccessToken}`,
+            ['Content-Type']: 'application/json'
+          },
+          true
+        );
+      }
+    }]
+  });
+};
+
 export const activateTravisApp = async (store)=> {
   store.addTask({
     type: 'batch',
@@ -187,8 +227,8 @@ export const activateTravisApp = async (store)=> {
       {
         type: 'task',
         description: 'open travis for activation',
-        task: ()=> {
-          opn('https://travis-ci.com/account/repositories');
+        task: async ()=> {
+          await opn('https://travis-ci.com/account/repositories', {wait: false});
 
           return {
             printInfo: 'Opened https://travis-ci.com/account/repositories for activation'
@@ -197,15 +237,6 @@ export const activateTravisApp = async (store)=> {
       }
     ]
   });
-
-  store.addQuestion(
-    store.prompter.createQuestion(
-      'Travis Github App activated: ',
-      'confirm',
-      'travisActivated',
-      store.answers.travisActivated || true
-    )
-  );
 };
 
 export const createCIConfig = async (store)=> {
@@ -237,11 +268,10 @@ export const createCIConfig = async (store)=> {
 
 export const hookupCI = async (store)=> {
   if (store.answers.ciPlatform === 'travis-ci') {
-    if (store.answers.travisActivated) {
-      await getTravisAccessToken(store);
-      await syncUserWithTravis(store);
-      await switchOnRepositoryInTravis(store);
-    }
+    await getTravisAccessToken(store);
+    await syncUserWithTravis(store);
+    await switchOnRepositoryInTravis(store);
+    await addEnvironmentVariables(store);
   }
 
   // TODO other CI tools

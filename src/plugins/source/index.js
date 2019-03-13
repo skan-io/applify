@@ -87,7 +87,7 @@ export default class ApplifySourcePlugin extends ApplifyPlugin {
     return ()=> new Promise((resolve)=> {
       if (store.answers.useGit) {
         store.on(INIT_COMPLETE, async ()=> {
-          await initialiseGit(store);
+          // await initialiseGit(store);
           resolve(null);
         });
       }
@@ -107,10 +107,10 @@ export default class ApplifySourcePlugin extends ApplifyPlugin {
 
     return ()=> Promise.resolve(null);
   }
-  
+
   async finish(store) {
     if (store.answers.useGit) {
-      await checkoutAndPush(store);
+      // await checkoutAndPush(store);
 
       if (store.answers.lockMasterBranch) {
         await lockDownMasterBranch(store);

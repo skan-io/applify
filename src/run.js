@@ -1,6 +1,6 @@
 import commander from 'commander';
-// import ApplifyPrompterPlugin from './plugins/prompter';
-// import ApplifyTaskerPlugin from './plugins/tasker';
+import ApplifyPromptPlugin from './plugins/prompter';
+import ApplifyTaskRunnerPlugin from './plugins/tasker';
 import ApplifyProjectPlugin from './plugins/project';
 import ApplifyPackagePlugin from './plugins/package';
 import ApplifySourcePlugin from './plugins/source';
@@ -8,9 +8,6 @@ import ApplifyBabelPlugin from './plugins/babel';
 import ApplifyFrameworkPlugin from './plugins/framework';
 import ApplifyBundlePlugin from './plugins/bundle';
 import ApplifyDeployPlugin from './plugins/deploy';
-// import ApplifyLanguagePlugin from './plugins/language';
-// import ApplifyBuildPlugin from './plugins/build';
-// import ApplifyDeployPlugin from './plugins/deploy';
 // import ApplifyTestPlugin from './plugins/test';
 // import ApplifyStylePlugin from './plugins/style';
 import pkgJson from './package.json';
@@ -19,8 +16,8 @@ import init from './init';
 
 
 const setGlobalPluginDefinitions = ()=> {
-  // global.ApplifyPrompterPlugin = ApplifyPrompterPlugin;
-  // global.ApplifyTaskerPlugin = ApplifyTaskerPlugin;
+  global.ApplifyPromptPlugin = ApplifyPromptPlugin;
+  global.ApplifyTaskRunnerPlugin = ApplifyTaskRunnerPlugin;
   global.ApplifyProjectPlugin = ApplifyProjectPlugin;
   global.ApplifyPackagePlugin = ApplifyPackagePlugin;
   global.ApplifySourcePlugin = ApplifySourcePlugin;
@@ -28,9 +25,6 @@ const setGlobalPluginDefinitions = ()=> {
   global.ApplifyFrameworkPlugin = ApplifyFrameworkPlugin;
   global.ApplifyBundlePlugin = ApplifyBundlePlugin;
   global.ApplifyDeployPlugin = ApplifyDeployPlugin;
-  // global.ApplifyLanguagePlugin = ApplifyLanguagePlugin;
-  // global.ApplifyBuildPlugin = ApplifyBuildPlugin;
-  // global.ApplifyDeployPlugin = ApplifyDeployPlugin;
   // global.ApplifyTestPlugin = ApplifyTestPlugin;
   // global.ApplifyStylePlugin = ApplifyStylePlugin;
 };

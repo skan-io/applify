@@ -55,21 +55,11 @@ export default class ApplifyDeployPlugin extends ApplifyPlugin {
     return ()=> Promise.resolve(null);
   }
 
-  async run(store) {
-    if (store.answers.useCi && store.answers.useGit) {
-      await createCIConfig(store);
-    }
-
-    store.emit(STEP_COMPLETE, 'run:deploy');
-    store.completedSteps.push('run:deploy');
-
-    return ()=> Promise.resolve(null);
-  }
-
   async finish(store) {
     if (store.answers.ciPlatform === 'travis-ci') {
-      await activateTravisApp(store);
       await hookupCI(store);
+      await createCIConfig(store);
+      await activateTravisApp(store);
     }
 
     store.emit(STEP_COMPLETE, 'finish:deploy');
