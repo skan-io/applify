@@ -2,11 +2,10 @@
 import React from 'react';
 import {connect, Provider} from 'react-redux';
 import PropTypes from 'prop-types';
-import {themr} from 'react-css-themr';
 import diff from 'jest-diff';
 import {shallow} from 'enzyme';
 import {shallowSerialize} from './shallow';
-import {testStore} from '../../testing/helpers';
+import {testStore} from '../../helpers';
 
 const defaultTheme = {
   componentOne: 'mock-componentOne',
@@ -163,7 +162,7 @@ describe('shallowSerialize', ()=> {
   <div>
     Testing
   </div>
-</SimpleComponent>  
+</SimpleComponent>
       `);
     });
 
@@ -247,59 +246,6 @@ describe('shallowSerialize', ()=> {
     Child Three
   </div>
 </Fragment>
-      `);
-    });
-  });
-
-  describe('for themed components', ()=> {
-    const TestComponent = (props)=> (
-      <div className={props.theme.componentOne}>
-        <div className={props.theme.container}>{props.stringProp}</div>
-      </div>
-    );
-    TestComponent.propTypes = {
-      theme: PropTypes.object,
-      stringProp: PropTypes.string
-    };
-    const ThemedComponent =
-      themr('TestComponent', defaultTheme)(TestComponent);
-    const TestThemedComponent = ()=> (
-      <div>
-        <ThemedComponent stringProp={'Test Component Label'} />
-      </div>
-    );
-    it(
-      'renders top level themed component as the unthemed component ' +
-      'with a theme prop',
-      ()=> {
-        const testWrapper = shallow(
-          <ThemedComponent stringProp={'Test Component Label'} />
-        );
-
-        expect(shallowSerialize(testWrapper)).toMatchTrimmed(`
-<TestComponent stringProp={"Test Component Label"} theme={{"componentOne":"mock-componentOne","container":"mock-container"}}>
-  <div className={"mock-componentOne"}>
-    <div className={"mock-container"}>
-      Test Component Label
-    </div>
-  </div>
-</TestComponent>
-        `);
-      });
-
-    it('strips out the themr component and renders the unthemed child', ()=> {
-      const testWrapper = shallow(<TestThemedComponent />);
-
-      expect(shallowSerialize(testWrapper)).toMatchTrimmed(`
-<div>
-  <TestComponent stringProp={"Test Component Label"} theme={{"componentOne":"mock-componentOne","container":"mock-container"}}>
-    <div className={"mock-componentOne"}>
-      <div className={"mock-container"}>
-        Test Component Label
-      </div>
-    </div>
-  </TestComponent>
-</div>
       `);
     });
   });

@@ -1,0 +1,20 @@
+
+$storybook-container-shadow: 1px 1px 5px 1px rgba(0, 0, 0, .37);
+
+.container {
+  margin: 3rem;
+  box-shadow: $storybook-container-shadow;
+  width: 80rem;
+  height: 65rem;
+  border-radius: .4rem;
+
+  > div {
+    height: 100%;
+    width: 100%;
+
+    > div:first-child {
+      height: 100%;
+      width: 100%;
+    }
+  }
+}

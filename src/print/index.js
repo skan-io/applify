@@ -99,7 +99,7 @@ export const printDebugOutput = (outputs)=> {
 };
 
 export const printNeedPlugins = ()=> {
-  printWarning(`-------------------------------
+  printError(`-------------------------------
 
    PLUGINS MUST BE DEFINED!
 

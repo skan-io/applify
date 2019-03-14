@@ -3,30 +3,37 @@ import ApplifyPromptPlugin from './plugins/prompter';
 import ApplifyTaskRunnerPlugin from './plugins/tasker';
 import ApplifyProjectPlugin from './plugins/project';
 import ApplifyPackagePlugin from './plugins/package';
-import ApplifySourcePlugin from './plugins/source';
+import ApplifyGithubPlugin from './plugins/github';
 import ApplifyBabelPlugin from './plugins/babel';
-import ApplifyFrameworkPlugin from './plugins/framework';
-import ApplifyBundlePlugin from './plugins/bundle';
-import ApplifyDeployPlugin from './plugins/deploy';
-// import ApplifyTestPlugin from './plugins/test';
-// import ApplifyStylePlugin from './plugins/style';
+import ApplifyReactReduxPlugin from './plugins/react-redux';
+import ApplifyWebpackPlugin from './plugins/webpack';
+import ApplifyJestEnzymePlugin from './plugins/jest-enzyme';
+import ApplifyEslintPlugin from './plugins/eslint';
+import ApplifyRemarkLintPlugin from './plugins/remark';
+import ApplifyTravisIntegrationPlugin from './plugins/travis';
+import ApplifySassPlugin from './plugins/sass';
+import ApplifyStorybookPlugin from './plugins/storybook';
 import pkgJson from './package.json';
 import {printHeadingAndArt} from './print';
 import init from './init';
 
 
+// eslint-disable-next-line max-statements
 const setGlobalPluginDefinitions = ()=> {
   global.ApplifyPromptPlugin = ApplifyPromptPlugin;
   global.ApplifyTaskRunnerPlugin = ApplifyTaskRunnerPlugin;
   global.ApplifyProjectPlugin = ApplifyProjectPlugin;
   global.ApplifyPackagePlugin = ApplifyPackagePlugin;
-  global.ApplifySourcePlugin = ApplifySourcePlugin;
+  global.ApplifyGithubPlugin = ApplifyGithubPlugin;
   global.ApplifyBabelPlugin = ApplifyBabelPlugin;
-  global.ApplifyFrameworkPlugin = ApplifyFrameworkPlugin;
-  global.ApplifyBundlePlugin = ApplifyBundlePlugin;
-  global.ApplifyDeployPlugin = ApplifyDeployPlugin;
-  // global.ApplifyTestPlugin = ApplifyTestPlugin;
-  // global.ApplifyStylePlugin = ApplifyStylePlugin;
+  global.ApplifyReactReduxPlugin = ApplifyReactReduxPlugin;
+  global.ApplifyWebpackPlugin = ApplifyWebpackPlugin;
+  global.ApplifyJestEnzymePlugin = ApplifyJestEnzymePlugin;
+  global.ApplifyEslintPlugin = ApplifyEslintPlugin;
+  global.ApplifyRemarkLintPlugin = ApplifyRemarkLintPlugin;
+  global.ApplifyTravisIntegrationPlugin = ApplifyTravisIntegrationPlugin;
+  global.ApplifySassPlugin = ApplifySassPlugin;
+  global.ApplifyStorybookPlugin = ApplifyStorybookPlugin;
 };
 
 const run = async (argv)=> {

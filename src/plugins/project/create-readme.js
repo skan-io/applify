@@ -60,19 +60,19 @@ const createReadmeTableOfContents = (store)=> {
   return `
   ## Table of Contents
 
-  ${projectPrivate ? '- [Security](#security)' : '\r'}
-  - [Background](#background)
-  - [Install](#install)
-  - [Usage](#usage)
-  - [Build & Package](#build-and-package)${useMultiEnv ? '\n- [Multi Environment Support](#multi-environment)' : ''}
-  - [Dev Tools](#dev-tools)${useEslint ? '\n  - [ESLint](#eslint-installation)' : ''}${useJest ? '\n  - [Testing](#running-tests)' : ''}${useCommitizen ? '\n  - [Contributing](#contributing)' : ''}
-  - [Documentation](#documentation)
-  - [App Configuration](#configuration)
-  - [Maintainers](#maintainers)
-  - [Under The Hood](#under-the-hood)
-  - [Disclaimer](#disclaimer)
-  - [License](#license)\n
-  `;
+${projectPrivate ? '    - [Security](#security)' : '\r'}
+    - [Background](#background)
+    - [Install](#install)
+    - [Usage](#usage)
+    - [Build & Package](#build-and-package)${useMultiEnv ? '\n    - [Multi Environment Support](#multi-environment)' : ''}
+    - [Dev Tools](#dev-tools)${useEslint ? '\n    - [ESLint](#eslint-installation)' : ''}${useJest ? '\n    - [Testing](#running-tests)' : ''}${useCommitizen ? '\n    - [Contributing](#contributing)' : ''}
+    - [Documentation](#documentation)
+    - [App Configuration](#configuration)
+    - [Maintainers](#maintainers)
+    - [Under The Hood](#under-the-hood)
+    - [Disclaimer](#disclaimer)
+    - [License](#license)\n
+`;
 };
 
 const createSecuritySection = ()=> `
@@ -95,14 +95,14 @@ Clone the repo and install dependencies:
 > \`\`\`bash
 > nvm use 10
 > \`\`\`
-
+>
 > Make sure to use the latest version of npm and applify:
 > \`\`\`bash
 > npm i -g npm
 > npm i -g @skan-io/applify
 > \`\`\`
 >
-
+>
 >**Note:**
 > If you upgrade from previous versions of node or npm you may have to
 > clear out your \`node_modules\` and the npm caches:
@@ -183,8 +183,8 @@ applify pull
 const createDevToolsSection = (store)=> `
 ## Dev Tools
 
-* [react-devtools](https://github.com/facebook/react-devtools)
-${store.answers.useRedux ? '* [redux-devtools-extension](https://github.com/zalmoxisus/redux-devtools-extension)\n' : '\n'}
+  * [react-devtools](https://github.com/facebook/react-devtools)
+${store.answers.useRedux ? '  * [redux-devtools-extension](https://github.com/zalmoxisus/redux-devtools-extension)\n' : '\n'}
 `;
 
 const createEslintSection = ()=> `
@@ -251,7 +251,7 @@ To run the local documentation generator and view the project documentation run:
 npx run docs
 \`\`\`
 
-Once started, you can view the docs at http://localhost:${store.answers.docsSeverPort}
+Once started, you can view the docs at [http://localhost:${store.answers.docsSeverPort}](http://localhost:${store.answers.docsSeverPort})
 
 See \`@skan-io/code-documentation\` repo for details on how to document your code
 to work with the generator.\n

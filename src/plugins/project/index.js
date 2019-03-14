@@ -7,13 +7,13 @@ import * as questions from './questions';
 
 
 /*
-  ApplifyMetaPlugin will collect some project meta data and create the
+  ApplifyProjectPlugin will collect some project meta data and create the
   project's README.md
  */
 export default class ApplifyProjectPlugin extends ApplifyPlugin {
   static async build(opts={}) {
     const author = await getNpmProfileName();
-    
+
     return new ApplifyProjectPlugin(opts, {author});
   }
 

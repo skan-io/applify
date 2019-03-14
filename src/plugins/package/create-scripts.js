@@ -104,7 +104,7 @@ export default {
     ' --node-env=webpack-dev'
   ),
 
-  server: 'webpack-dev-server --progress',${answers.useStorybook ? `\n  storybook: 'run config:dev storybook:server',\n  'storybook:server': 'start-storybook -c storybook -p 6006',` : ''}${answers.useCi ? `\n\n  deploy: 'run deploy:app${answers.useCommitizen ? ' release\',' : '\','}` : ''}${answers.useCi ? '\n  [\'deploy:app\']: \'run config upload\',' : ''}${answers.useCommitizen && answers.useCi ? '\n  release: \'semantic-release\',' : ''}
+  server: 'webpack-dev-server --progress',${answers.useStorybook ? `\n  storybook: 'run config:dev storybook:server',\n  'storybook:server': 'start-storybook -c storybook -p ${answers.storybookServerPort}',` : ''}${answers.useCi ? `\n\n  deploy: 'run deploy:app${answers.useCommitizen ? ' release\',' : '\','}` : ''}${answers.useCi ? '\n  [\'deploy:app\']: \'run config upload\',' : ''}${answers.useCommitizen && answers.useCi ? '\n  release: \'semantic-release\',' : ''}
 
   clean: 'rimraf ./build',
   build: 'webpack --display minimal --bail',${answers.useJest ? `\n\n  test: 'run lint jest:full',` : `\n\n  test: 'run lint',`}
@@ -112,7 +112,7 @@ export default {
   lint: 'run lint:*',
   ${answers.useEslint ? `\n  'lint:js': (
     'eslint --report-unused-disable-directives --ignore-path .gitignore .'
-  ),` : ''}${answers.styleChoice === 'sass' ? `\n  'lint:sass': 'sass-lint --no-exit --verbose',` : ''}\n  'lint:md': 'remark -i .gitignore --no-stdout --use remark-lint *.md'${answers.useJest ? `,\n\n  jest: 'jest --collectCoverage=false --cache=true',
+  ),` : ''}${answers.styleChoice === 'sass' ? `\n  'lint:sass': 'sass-lint --no-exit --verbose',` : ''}${answers.useRemarkLint ? `\n  'lint:md': 'remark -i .gitignore --no-stdout --use remark-lint *.md'` : ''}${answers.useJest ? `,\n\n  jest: 'jest --collectCoverage=false --cache=true',
   'jest:full': 'jest --verbose --runInBand --no-cache'` : ''}
-}
+};
 `;

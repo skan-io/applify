@@ -2,7 +2,10 @@
 import {parseArrayString} from '../utils';
 
 
-export const createBabelConfigTask = (store)=> `const configFunc = require('@skan-io/babel-config-react');
+export const createBabelConfigTask = (store)=> `/* eslint no-undef: 0 */
+/* eslint comma-spacing: 0 */
+
+const configFunc = require('@skan-io/babel-config-react');
 
 module.exports = {
   ...configFunc.default(

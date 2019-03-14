@@ -9,13 +9,6 @@ import {inspect} from 'util';
 import {shallow} from 'enzyme';
 import diff from 'jest-diff';
 
-// We need to make sure the Open Layers objects are setup for testing.
-// This import has to happen before any of our mapping imports.
-import patchCanvasRuntime from './canvas';
-
-
-patchCanvasRuntime(window); // eslint-disable-line no-undef
-
 
 // TODO: enable lifecycle methods as it is the default
 const shallowOpts = {context: {}, disableLifecycleMethods: true};
