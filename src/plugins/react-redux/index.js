@@ -1,6 +1,9 @@
 import ApplifyPlugin from '..';
 import {STEP_COMPLETE} from '../../events';
-import {installReactReduxDependencies} from './functionality';
+import {
+  installReactReduxDependencies,
+  createReduxFiles
+} from './functionality';
 import {property} from '../../utils/obj';
 import * as questions from './questions';
 
@@ -43,6 +46,7 @@ export default class ApplifyReactReduxPlugin extends ApplifyPlugin {
 
   async run(store) {
     await installReactReduxDependencies(store);
+    await createReduxFiles(store);
 
     store.emit(STEP_COMPLETE, 'run:react-redux');
     store.completedSteps.push('run:react-redux');

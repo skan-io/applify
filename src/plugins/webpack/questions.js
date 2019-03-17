@@ -12,7 +12,10 @@ export const buildEntries = async (store, defaultAnswer)=> {
         question,
         'input',
         'buildEntries',
-        store.answers.buildEntries || defaultAnswer || 'index.html.js',
+        store.answers.htmlMain
+          || store.answers.buildEntries
+          || defaultAnswer
+          || 'index.html.js',
         undefined,
         (input)=> {
           if (!input || input === '') {

@@ -6,6 +6,7 @@ import ApplifyPackagePlugin from './plugins/package';
 import ApplifyGithubPlugin from './plugins/github';
 import ApplifyBabelPlugin from './plugins/babel';
 import ApplifyReactReduxPlugin from './plugins/react-redux';
+import ApplifyHtmlPlugin from './plugins/html';
 import ApplifyWebpackPlugin from './plugins/webpack';
 import ApplifyJestEnzymePlugin from './plugins/jest-enzyme';
 import ApplifyEslintPlugin from './plugins/eslint';
@@ -27,6 +28,7 @@ const setGlobalPluginDefinitions = ()=> {
   global.ApplifyGithubPlugin = ApplifyGithubPlugin;
   global.ApplifyBabelPlugin = ApplifyBabelPlugin;
   global.ApplifyReactReduxPlugin = ApplifyReactReduxPlugin;
+  global.ApplifyHtmlPlugin = ApplifyHtmlPlugin;
   global.ApplifyWebpackPlugin = ApplifyWebpackPlugin;
   global.ApplifyJestEnzymePlugin = ApplifyJestEnzymePlugin;
   global.ApplifyEslintPlugin = ApplifyEslintPlugin;

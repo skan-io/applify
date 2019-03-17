@@ -60,18 +60,18 @@ const createReadmeTableOfContents = (store)=> {
   return `
   ## Table of Contents
 
-${projectPrivate ? '    - [Security](#security)' : '\r'}
-    - [Background](#background)
-    - [Install](#install)
-    - [Usage](#usage)
-    - [Build & Package](#build-and-package)${useMultiEnv ? '\n    - [Multi Environment Support](#multi-environment)' : ''}
-    - [Dev Tools](#dev-tools)${useEslint ? '\n    - [ESLint](#eslint-installation)' : ''}${useJest ? '\n    - [Testing](#running-tests)' : ''}${useCommitizen ? '\n    - [Contributing](#contributing)' : ''}
-    - [Documentation](#documentation)
-    - [App Configuration](#configuration)
-    - [Maintainers](#maintainers)
-    - [Under The Hood](#under-the-hood)
-    - [Disclaimer](#disclaimer)
-    - [License](#license)\n
+${projectPrivate ? '-   [Security](#security)' : '\r'}
+-   [Background](#background)
+-   [Install](#install)
+-   [Usage](#usage)
+-   [Build & Package](#build-and-package)${useMultiEnv ? '\n-   [Multi Environment Support](#multi-environment)' : ''}
+-   [Dev Tools](#dev-tools)${useEslint ? '\n-   [ESLint](#eslint-installation)' : ''}${useJest ? '\n-   [Testing](#running-tests)' : ''}${useCommitizen ? '\n-   [Contributing](#contributing)' : ''}
+-   [Documentation](#documentation)
+-   [App Configuration](#configuration)
+-   [Maintainers](#maintainers)
+-   [Under The Hood](#under-the-hood)
+-   [Disclaimer](#disclaimer)
+-   [License](#license)\n
 `;
 };
 
